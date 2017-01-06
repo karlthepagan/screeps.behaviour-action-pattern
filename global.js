@@ -91,6 +91,11 @@ var mod = {
                         color: COLOR_WHITE,
                         secondaryColor: COLOR_GREY,
                         filter: {'color': COLOR_WHITE, 'secondaryColor': COLOR_GREY },
+                    },
+                    mining: {
+                        color: COLOR_WHITE,
+                        secondaryColor: COLOR_BROWN,
+                        filter: {'color': COLOR_WHITE, 'secondaryColor': COLOR_BROWN}
                     }
                 }
             },
