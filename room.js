@@ -672,10 +672,7 @@ var mod = {
                 get: function () {
                     if (_.isUndefined(this._currentCostMatrix) ) {
                         let costs = this.costMatrix;
-                        // Avoid creeps in the room
-                        this.allCreeps.forEach(function(creep) {
-                            costs.set(creep.pos.x, creep.pos.y, 0xff);
-                        });
+                        mod.currentTerrainDecorator(this, costs);
                         this._currentCostMatrix = costs;
                     }
                     return this._currentCostMatrix;
@@ -1345,7 +1342,13 @@ var mod = {
                 console.log( dye(CRAYON.error, 'Error in room.js (Room.prototype.loop) for "' + this.name + '": <br/>' + err.toString()+ '<br/>' + err.stack));
             }
         };
-    }
-}
+    },
+    currentTerrainDecorator: function(room, costMatrix) {
+        // Avoid creeps in the room
+        room.allCreeps.forEach(function(creep) {
+            costMatrix.set(creep.pos.x, creep.pos.y, 0xff);
+        });
+    },
+};
 
 module.exports = mod;
