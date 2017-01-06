@@ -1,5 +1,19 @@
 /* https://github.com/ScreepsOCS/screeps.behaviour-action-pattern */
 
+function looseBindAll(thisArg, keys) {
+    const iterKeys = keys ? keys : _.keys(thisArg);
+
+    for (const fn of iterKeys) {
+        if (typeof thisArg[fn] === "function") {
+            const original = thisArg[fn];
+            thisArg[fn] = thisArg[fn].bind(thisArg);
+            thisArg[fn].unbound = original;
+        }
+    }
+
+    return thisArg;
+}
+
 module.exports.loop = function () {
     // ensure required memory namespaces
     if (Memory.modules === undefined) 
@@ -61,20 +75,24 @@ module.exports.loop = function () {
         return mod;
     };
     // partially override a module using a registered viral file
-    global.infect = (mod, namespace, modName) => {
+    global.infect = (mod, namespace, modName, bindAll) => {
         if( Memory.modules[namespace][modName] ) {
             // get module from stored viral override path
             let viralOverride = tryRequire(`./${namespace}.${modName}`);
-            // override
-            if( viralOverride ) _.assign(mod, viralOverride);
+            // override, _.create preserves mod as the __proto__
+            if( viralOverride ) {
+                mod = _.create(mod, viralOverride);
+                if( bindAll ) mod = looseBindAll(mod, _.keys(viralOverride));
+            }
             // cleanup
             else delete Memory.modules[namespace][modName];
         }
         return mod;
-    }
+    };
     // loads (require) a module. use this function anywhere you want to load a module.
     // respects custom and viral overrides
-    global.load = (modName) => {
+    // the mod can inherit and bind to a provided prototype
+    global.load = (modName, prototype) => {
         // read stored module path
         let path = getPath(modName);
         // try to load module
@@ -86,9 +104,12 @@ module.exports.loop = function () {
             mod = tryRequire(path);
         }
         if( mod ) {
-            // load viral overrides 
-            mod = infect(mod, 'internalViral', modName);
-            mod = infect(mod, 'viral', modName);
+            if( prototype ) {
+                mod = looseBindAll(_.create(prototype, mod), _.keys(mod));
+            }
+            // load viral overrides
+            mod = infect(mod, 'internalViral', modName, !!prototype);
+            mod = infect(mod, 'viral', modName, !!prototype);
         }
         return mod;
     };
@@ -97,7 +118,6 @@ module.exports.loop = function () {
     let params = load("parameter");
     let glob = load("global");
     glob.init(params);
-
     // Extend Server Objects
     Extensions.extend();
     Creep.extend();
