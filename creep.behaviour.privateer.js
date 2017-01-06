@@ -16,6 +16,9 @@ module.exports = {
             logError('Creep without action/activity!\nCreep: ' + creep.name + '\ndata: ' + JSON.stringify(creep.data));
         }
     },
+    nextWorkAction: function(creep, carrySum){
+        Creep.behaviour.worker.nextAction(creep);
+    },
     nextAction: function(creep){
         let carrySum = creep.sum;
         // at home
@@ -37,8 +40,7 @@ module.exports = {
                 }
                 //if( Creep.action.storing.assign(creep) ) return;
                 if( Creep.action.charging.assign(creep) ) return;
-                if( !creep.room.ally && Creep.action.storing.assign(creep) ) return;
-                Creep.behaviour.worker.nextAction(creep);
+                this.nextWorkAction(creep, carrySum);
                 return;
             }
             // empty
@@ -48,7 +50,7 @@ module.exports = {
             else {
                 // no new flag
                 // behave as worker
-                Creep.behaviour.worker.nextAction(creep);
+                this.nextWorkAction(creep, 0);
                 return;
             }
         }
