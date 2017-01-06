@@ -1,5 +1,19 @@
 /* https://github.com/ScreepsOCS/screeps.behaviour-action-pattern */
 
+function looseBindAll(thisArg, keys) {
+    const iterKeys = keys ? keys : _.keys(thisArg);
+
+    for (const fn of iterKeys) {
+        if (typeof thisArg[fn] === "function") {
+            const original = thisArg[fn];
+            thisArg[fn] = thisArg[fn].bind(thisArg);
+            thisArg[fn].unbound = original;
+        }
+    }
+
+    return thisArg;
+}
+
 module.exports.loop = function () {
     // ensure required memory namespaces
     if (Memory.modules === undefined) 
@@ -68,7 +82,7 @@ module.exports.loop = function () {
             // override, _.create preserves mod as the __proto__
             if( viralOverride ) {
                 mod = _.create(mod, viralOverride);
-                if( bindAll ) mod = _.bindAll(mod, _.keys(viralOverride));
+                if( bindAll ) mod = looseBindAll(mod, _.keys(viralOverride));
             }
             // cleanup
             else delete Memory.modules[namespace][modName];
@@ -91,7 +105,7 @@ module.exports.loop = function () {
         }
         if( mod ) {
             if( prototype ) {
-                mod = _.bindAll(_.create(prototype, mod), _.keys(mod));
+                mod = looseBindAll(_.create(prototype, mod), _.keys(mod));
             }
             // load viral overrides
             mod = infect(mod, 'internalViral', modName, !!prototype);
