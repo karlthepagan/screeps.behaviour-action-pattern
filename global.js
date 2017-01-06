@@ -1,9 +1,9 @@
 var mod = {
     init: function(params){
         // Load extension functions
-        Creep.extend = load("creep").extend;
-        Room.extend = load("room").extend;
-        Spawn.extend = load("spawn").extend;
+        Creep.extend = load("creep", Creep).extend;
+        Room.extend = load("room", Room).extend;
+        Spawn.extend = load("spawn", Spawn).extend;
         // make params available globally
         _.assign(global, params);
         // Add more stuff to global
