@@ -1,5 +1,7 @@
 var mod = {
     extend: function(){
+        const mod = this;
+
         let Container = function(room){
             this.room = room;
 
@@ -672,10 +674,7 @@ var mod = {
                 get: function () {
                     if (_.isUndefined(this._currentCostMatrix) ) {
                         let costs = this.costMatrix;
-                        // Avoid creeps in the room
-                        this.allCreeps.forEach(function(creep) {
-                            costs.set(creep.pos.x, creep.pos.y, 0xff);
-                        });
+                        mod.currentTerrainDecorator(this, costs);
                         this._currentCostMatrix = costs;
                     }
                     return this._currentCostMatrix;
@@ -1282,7 +1281,7 @@ var mod = {
             delete this._currentCostMatrix;
             delete this._isReceivingEnergy;
             delete this._reservedSpawnEnergy;
-            delete this._creeps
+            delete this._creeps;
             delete this._privateerMaxWeight;
             delete this._claimerMaxWeight;
             delete this._combatCreeps;
@@ -1345,7 +1344,13 @@ var mod = {
                 console.log( dye(CRAYON.error, 'Error in room.js (Room.prototype.loop) for "' + this.name + '": <br/>' + err.toString()+ '<br/>' + err.stack));
             }
         };
-    }
-}
+    },
+    currentTerrainDecorator: function(room, costMatrix) {
+        // Avoid creeps in the room
+        room.allCreeps.forEach(function(creep) {
+            costMatrix.set(creep.pos.x, creep.pos.y, 0xff);
+        });
+    },
+};
 
 module.exports = mod;
