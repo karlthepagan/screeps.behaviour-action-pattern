@@ -16,7 +16,7 @@ module.exports = {
             logError('Creep without action/activity!\nCreep: ' + creep.name + '\ndata: ' + JSON.stringify(creep.data));
         }
     },
-    nextWorkAction: function(creep, carrySum){
+    nextWorkAction: function(creep){
         Creep.behaviour.worker.nextAction(creep);
     },
     nextAction: function(creep){
@@ -40,7 +40,7 @@ module.exports = {
                 }
                 //if( Creep.action.storing.assign(creep) ) return;
                 if( Creep.action.charging.assign(creep) ) return;
-                this.nextWorkAction(creep, carrySum);
+                this.nextWorkAction(creep);
                 return;
             }
             // empty
@@ -50,7 +50,7 @@ module.exports = {
             else {
                 // no new flag
                 // behave as worker
-                this.nextWorkAction(creep, 0);
+                this.nextWorkAction(creep);
                 return;
             }
         }
