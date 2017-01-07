@@ -1353,4 +1353,4 @@ var mod = {
     },
 };
 
-module.exports = mod;
+module.exports = _.bindAll(mod);
