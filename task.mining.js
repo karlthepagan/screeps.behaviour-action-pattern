@@ -68,7 +68,7 @@ var mod = {
 
     // check if a new creep has to be spawned
     checkForRequiredCreeps: (flag) => {
-        let spawnRoom = Game.rooms[Room.bestSpawnRoomFor(flag.pos.roomName)];
+        let spawnRoom = Room.bestSpawnRoomFor(flag.pos.roomName);
         let room = Game.rooms[flag.pos.roomName];
         if(undefined == room) { // No room visibility, wait until we have a creep there?
             // global.logSystem(flag.pos.roomName, dye(CRAYON.error, `No visibility of room ${flag.pos.roomName} for remote mining.` ));
