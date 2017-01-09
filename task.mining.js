@@ -99,8 +99,8 @@ var mod = {
         }
 
         // todo count creeps by type needed per source / mineral
-        let haulerCount = memory.queued.hauler.length + _.filter(Game.creeps, function(c){return c.data.creepType=='remoteHauler' && c.data.destiny.room==room.name;}).length;
-        let minerCount = memory.queued.miner.length + _.filter(Game.creeps, function(c){return c.data.creepType=='remoteMiner' && c.data.destiny.room==room.name;}).length;
+        let haulerCount = memory.queued.hauler.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteHauler' && c.data.destiny.room==room.name;}).length;
+        let minerCount = memory.queued.miner.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteMiner' && c.data.destiny.room==room.name;}).length;
 
         if(minerCount < memory.sources.length) {
             for(var i = 0; i < memory.sources.length; i++) {
