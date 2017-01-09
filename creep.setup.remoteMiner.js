@@ -1,10 +1,11 @@
 var setup = new Creep.Setup('remoteMiner');
 setup.minControllerLevel = 4;
 setup.default = {
-        fixedBody: [WORK, WORK, WORK, WORK, WORK, MOVE, MOVE, MOVE],
+        fixedBody: [MOVE, MOVE, MOVE, WORK, WORK, WORK, WORK, WORK],
+        multiBody: [],
         minAbsEnergyAvailable: 650,
         minEnergyAvailable: 0.3,
-        maxMulti: 1,
+        maxMulti: 0,
         maxCount: room => room.sources.length
 };
 setup.RCL = {
