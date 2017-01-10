@@ -126,5 +126,15 @@ module.exports = {
                 }
             }
         }
-    }
+    },
+    register: function(creepMod) {
+        Creep.actionError.on(function({creep, tryAction, tryTarget, workResult}) {
+            if (creep.data.creepType !== this.name) return;
+
+            if (workResult === ERR_NOT_ENOUGH_RESOURCES) {
+                creep.honk();
+                Creep.action.idle.assign(creep);
+            }
+        });
+    },
 }

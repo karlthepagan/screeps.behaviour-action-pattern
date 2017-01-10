@@ -1,3 +1,5 @@
+let retryLoop = false;
+
 module.exports = {
     name: 'remoteHauler',
     run: function(creep) {
@@ -91,5 +93,19 @@ module.exports = {
     goHome: function(creep){
         Creep.action.travelling.assign(creep, Game.rooms[creep.data.homeRoom].controller);
         return;
-    }
+    },
+    register: function(creepMod) {
+        Creep.actionError.on(function({creep, tryAction, tryTarget, workResult}) {
+            if (creep.data.creepType !== this.name || retryLoop) return;
+
+            if (workResult === ERR_NO_BODYPART) {
+                if (creep.getActiveBodyparts(WORK) === 0) {
+                    creep.drop(RESOURCE_ENERGY);
+                    retryLoop = true;
+                    this.run(creep);
+                    retryLoop = false;
+                }
+            }
+        });
+    },
 }
