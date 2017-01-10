@@ -1,11 +1,15 @@
 var action = new Creep.Action('reserving');
-action.isValidAction = function(creep){ return true; }; 
+action.isValidAction = function(creep){ return true; };
 action.isValidTarget = function(target){  return target && (!target.reservation || target.reservation.ticksToEnd < 4999 ) };
 action.isAddableAction = function(){ return true; };
 action.isAddableTarget = function(){ return target &&
-    ( target instanceof Flag || ( target.structureType === 'controller' && !target.owner ) ); 
+    ( target instanceof Flag || ( target.structureType === 'controller' && !target.owner ) );
 };
 action.newTarget = function(creep){
+    if(creep.data.destiny && creep.data.destiny.room && Game.rooms[creep.data.destiny.room]) {
+        return Game.rooms[creep.data.destiny.room].controller;
+    }
+
     let validColor = flagEntry => (
         (flagEntry.color == FLAG_COLOR.claim.reserve.color && flagEntry.secondaryColor == FLAG_COLOR.claim.reserve.secondaryColor) ||
         (flagEntry.color == FLAG_COLOR.invade.exploit.color && flagEntry.secondaryColor == FLAG_COLOR.invade.exploit.secondaryColor)
