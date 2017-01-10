@@ -1,15 +1,5 @@
 var mod = {
     extend: function(){
-        Spawn.priorityHigh = [
-            Creep.setup.worker,
-            Creep.setup.miner,
-            Creep.setup.hauler,
-            Creep.setup.upgrader];
-        Spawn.priorityLow = [
-            Creep.setup.mineralMiner,
-            Creep.setup.pioneer,
-          //  Creep.setup.claimer,
-            Creep.setup.privateer];
         Spawn.prototype.loop = function(){
             if( this.spawning ) return;
             let room = this.room;
@@ -22,10 +12,10 @@ var mod = {
             let busy = this.createCreepByQueue(room.spawnQueueHigh);
             // don't spawn lower if there is one waiting in the higher queue 
             if( !busy && room.spawnQueueHigh.length == 0 && Game.time % SPAWN_INTERVAL == 0 ) {
-                busy = _.some(Spawn.priorityHigh, probe);
+                busy = _.some(room.setupQueueHigh, probe);
                 if( !busy ) busy = this.createCreepByQueue(room.spawnQueueMedium);
                 if( !busy && room.spawnQueueMedium.length == 0 ) {
-                    busy = _.some(Spawn.priorityLow, probe);
+                    busy = _.some(room.setupQueueLow, probe);
                     if( !busy ) busy = this.createCreepByQueue(room.spawnQueueLow);
                 }
             }

@@ -12,7 +12,8 @@ setup.small = {
     minEnergyAvailable: 0.6,
     maxMulti: 0,
     maxCount: setup.maxCount,
-    maxWeight: setup.maxWeight
+    maxWeight: setup.maxWeight,
+    customPriority: 1,
 };
 setup.mid = {
     fixedBody: [CLAIM, MOVE, CLAIM, MOVE],
@@ -21,7 +22,8 @@ setup.mid = {
     minEnergyAvailable: 0.6,
     maxMulti: 0,
     maxCount: setup.maxCount,
-    maxWeight: setup.maxWeight
+    maxWeight: setup.maxWeight,
+    customPriority: 1,
 };
 setup.large = {
     fixedBody: [CLAIM, MOVE, CLAIM, MOVE],
@@ -30,7 +32,8 @@ setup.large = {
     minEnergyAvailable: 0.6,
     maxMulti: 1,
     maxCount: setup.maxCount,
-    maxWeight: setup.maxWeight
+    maxWeight: setup.maxWeight,
+    customPriority: 1,
 };
 
 setup.RCL = {
