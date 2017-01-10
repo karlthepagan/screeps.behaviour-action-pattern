@@ -156,7 +156,7 @@ var mod = {
             }
         }
 
-        if(claimerCount < 1 && room.controller && !room.controller.my && (!room.controller.reservation || room.controller.reservation.ticksToEnd < 2000)) {
+        if(claimerCount < REMOTE_CLAIMER_MULTIPLIER && room.controller && !room.controller.my && (!room.controller.reservation || room.controller.reservation.ticksToEnd < 2000)) {
             let creep = Creep.setup.claimer.buildParams(spawnRoom.structures.spawns[0]);
             let name = 'claimer-' + flag.name;
             creep.name = name;
