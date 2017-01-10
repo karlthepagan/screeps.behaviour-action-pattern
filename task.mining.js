@@ -84,12 +84,14 @@ var mod = {
         // }
 
         if( !memory.hasOwnProperty('queued') )
-            memory.queued = {miner:[], hauler:[]};
+            memory.queued = {miner:[], hauler:[], worker:[]};
 
         if( !memory.queued.hasOwnProperty('miner') )
             memory.queued.miner = [];
         if( !memory.queued.hasOwnProperty('hauler') )
             memory.queued.hauler = [];
+        if( !memory.queued.hasOwnProperty('worker') )
+            memory.queued.worker = [];
 
         if( !memory.hasOwnProperty('sources') ){
             memory.sources = [];
@@ -101,6 +103,7 @@ var mod = {
         // todo count creeps by type needed per source / mineral
         let haulerCount = memory.queued.hauler.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteHauler' && c.data.destiny.room==room.name;}).length;
         let minerCount = memory.queued.miner.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteMiner' && c.data.destiny.room==room.name;}).length;
+        let workerCount = memory.queued.worker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==room.name;}).length;
 
         if(minerCount < memory.sources.length) {
             for(var i = 0; i < memory.sources.length; i++) {
@@ -145,6 +148,27 @@ var mod = {
                 });
             }
         }
+
+        if(workerCount < memory.sources.length) {
+            let creep = Creep.setup.remoteWorker.buildParams(spawnRoom.structures.spawns[0]);
+            let name = 'remoteWorker-' + flag.name;
+            creep.name = name;
+            creep.destiny = { task: "mining", role: "worker", flagName: flag.name, room: flag.pos.roomName };
+            if( creep.parts.length === 0 ) {
+                // creep has no body.
+                global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body creep. Aborted.' ));
+                return;
+            }
+
+            // queue creep for spawning
+            spawnRoom.spawnQueueLow.push(creep);
+
+            // save queued creep to task memory
+            memory.queued.worker.push({
+                room: room.name,
+                name: name
+            });
+        }
     },
     memory: key => {
         return Task.memory('mining', key);
@@ -154,7 +178,6 @@ var mod = {
     nextAction: creep => {
         // if not in the target room, travel there
         if( creep.room.name != creep.data.destiny.room ){
-            if(CHATTY) creep.say('travelling', SAY_PUBLIC);
             Creep.action.travelling.assign(creep, Game.flags[creep.data.destiny.flagName]);
         }
     }

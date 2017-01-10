@@ -1,12 +1,12 @@
-var setup = new Creep.Setup('remoteHauler');
+var setup = new Creep.Setup('remoteWorker');
 setup.minControllerLevel = 4;
 setup.default = {
-        fixedBody: [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
-        multiBody: [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE],
+        fixedBody: [MOVE, MOVE, MOVE, CARRY, CARRY, WORK, WORK, WORK, WORK],
+        multiBody: [],
         minAbsEnergyAvailable: 650,
         minEnergyAvailable: 0.3,
-        maxMulti: 2,
-        maxCount: room => room.sources.length * REMOTE_HAULER_MULTIPLIER
+        maxMulti: 0,
+        maxCount: room => room.sources.length
 };
 setup.RCL = {
     1: setup.none,
