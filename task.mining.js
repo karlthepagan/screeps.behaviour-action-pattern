@@ -75,7 +75,7 @@ var mod = {
             return;
         }
 
-        // Use the roomName as key in Task.memory? 
+        // Use the roomName as key in Task.memory?
         // Prevents accidentally processing same room multiple times if flags > 1
         let memory = Task.mining.memory(flag.pos.roomName);
 
@@ -149,7 +149,7 @@ var mod = {
             }
         }
 
-        if(workerCount < memory.sources.length) {
+        if(workerCount < REMOTE_WORKER_MULTIPLIER) {
             let creep = Creep.setup.remoteWorker.buildParams(spawnRoom.structures.spawns[0]);
             let name = 'remoteWorker-' + flag.name;
             creep.name = name;

@@ -6,7 +6,7 @@ setup.default = {
         minAbsEnergyAvailable: 650,
         minEnergyAvailable: 0.3,
         maxMulti: 0,
-        maxCount: room => room.sources.length
+        maxCount: REMOTE_WORKER_MULTIPLIER
 };
 setup.RCL = {
     1: setup.none,
