@@ -435,17 +435,22 @@ var mod = {
             }
         });
 
-        Creep.prototype.onError = function(tryAction, tryTarget, workResult) {
-            if (this.resolvingError) return;
+        // errorData = {errorCode, action, target, ...}
+        Creep.prototype.handleError = function(errorData) {
+            if (Creep.resolvingError) return;
 
-            this.resolvingError = tryAction;
-            Creep.actionError.trigger({creep: this, tryAction, tryTarget, workResult});
+            this.resolvingError = errorData;
+            errorData.preventDefault = function() {
+                Creep.resolvingError = null;
+            };
 
-            if (this.resolvingError) {
-                if (DEBUG) logErrorCode(this, workResult);
+            Creep.error.trigger(errorData);
+
+            if (Creep.resolvingError) {
+                if (DEBUG) logErrorCode(this, errorData.errorCode);
                 delete this.data.actionName;
                 delete this.data.targetId;
-                delete this.resolvingError;
+                Creep.resolvingError = null;
             }
         };
     }

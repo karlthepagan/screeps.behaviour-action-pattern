@@ -27,7 +27,7 @@ action.step = function(creep){
     if( range <= this.targetRange ) {
         var workResult = this.work(creep);
         if( workResult != OK ) {
-            creep.onError(this, creep.target, workResult);
+            creep.handleError({errorCode: workResult, action: this, target: creep.target, range, creep});
         }
     }
     creep.drive( creep.target.pos, this.reachedRange, this.targetRange, range );
