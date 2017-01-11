@@ -115,7 +115,7 @@ var mod = {
                 creep.destiny = { task: "mining", role: "miner", flagName: flag.name, room: flag.pos.roomName };
                 if( creep.parts.length === 0 ) {
                     // creep has no body.
-                    global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body creep. Aborted.' ));
+                    global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body miner. Aborted.' ));
                     return;
                 }
                 // queue creep for spawning
@@ -137,7 +137,7 @@ var mod = {
                 creep.destiny = { task: "mining", role: "hauler", flagName: flag.name, room: flag.pos.roomName };
                 if( creep.parts.length === 0 ) {
                     // creep has no body.
-                    global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body creep. Aborted.' ));
+                    global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body hauler. Aborted.' ));
                     return;
                 }
                 // queue creep for spawning
@@ -158,7 +158,7 @@ var mod = {
             creep.destiny = { task: "mining", role: "claimer", flagName: flag.name, room: flag.pos.roomName };
             if( creep.parts.length === 0 ) {
                 // creep has no body.
-                global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body creep. Aborted.' ));
+                global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body claimer. Aborted.' ));
                 return;
             }
 
@@ -179,7 +179,7 @@ var mod = {
             creep.destiny = { task: "mining", role: "worker", flagName: flag.name, room: flag.pos.roomName };
             if( creep.parts.length === 0 ) {
                 // creep has no body.
-                global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body creep. Aborted.' ));
+                global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body worker. Aborted.' ));
                 return;
             }
 
