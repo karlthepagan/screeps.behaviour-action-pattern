@@ -69,15 +69,12 @@ var mod = {
     // check if a new creep has to be spawned
     checkForRequiredCreeps: (flag) => {
         let spawnRoom = Room.bestSpawnRoomFor(flag.pos.roomName);
-        let room = Game.rooms[flag.pos.roomName];
-        if(undefined == room) { // No room visibility, wait until we have a creep there?
-            // global.logSystem(flag.pos.roomName, dye(CRAYON.error, `No visibility of room ${flag.pos.roomName} for remote mining.` ));
-            return;
-        }
+        const roomName = flag.pos.roomName;
+        const room = Game.rooms[roomName];
 
         // Use the roomName as key in Task.memory?
         // Prevents accidentally processing same room multiple times if flags > 1
-        let memory = Task.mining.memory(flag.pos.roomName);
+        let memory = Task.mining.memory(roomName);
 
         // if( !memory.hasOwnProperty('creeps') ){
         //     memory.creeps = {miner:{},hauler:{}};
@@ -102,18 +99,16 @@ var mod = {
                 memory.sources.push(sources[x].id);
         }
 
-        // todo count creeps by type needed per source / mineral
-        let haulerCount = memory.queued.hauler.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteHauler' && c.data.destiny.room==room.name;}).length;
-        let minerCount = memory.queued.miner.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteMiner' && c.data.destiny.room==room.name;}).length;
-        let claimerCount = memory.queued.claimer.length + _.filter(Game.creeps, function(c) {
-            if(c.data.destiny && c.data.destiny.room) {
-                return c.data && c.data.creepType=='claimer' && c.data.destiny.room==room.name;
-            }
-        }).length;
-        let workerCount = memory.queued.worker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==room.name;}).length;
+        const sourceCount = memory.sources ? memory.sources.length : 1;
 
-        if(minerCount < memory.sources.length) {
-            for(var i = 0; i < memory.sources.length; i++) {
+        // todo count creeps by type needed per source / mineral
+        let haulerCount = memory.queued.hauler.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteHauler' && c.data.destiny.room==roomName;}).length;
+        let minerCount = memory.queued.miner.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteMiner' && c.data.destiny.room==roomName;}).length;
+        let claimerCount = memory.queued.claimer.length + _.filter(Game.creeps, function(c){return c.data && c.data.destiny && c.data.creepType=='claimer' && c.data.destiny.room==roomName;}).length;
+        let workerCount = memory.queued.worker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==roomName;}).length;
+
+        if(minerCount < sourceCount) {
+            for(var i = 0; i < sourceCount; i++) {
                 let name = 'remoteMiner-' + flag.name;
                 let creep = Creep.setup.remoteMiner.buildParams(spawnRoom.structures.spawns[0]);
                 creep.name = name;
@@ -128,14 +123,14 @@ var mod = {
 
                 // save queued creep to task memory
                 memory.queued.miner.push({
-                    room: room.name,
+                    room: roomName,
                     name: name
                 });
             }
         }
 
-        if(haulerCount < (memory.sources.length * REMOTE_HAULER_MULTIPLIER ) ) {
-            for(var i = 0; i < memory.sources.length * REMOTE_HAULER_MULTIPLIER; i++) {
+        if(haulerCount < (sourceCount * REMOTE_HAULER_MULTIPLIER ) ) {
+            for(var i = 0; i < sourceCount * REMOTE_HAULER_MULTIPLIER; i++) {
                 let creep = Creep.setup.remoteHauler.buildParams(spawnRoom.structures.spawns[0]);
                 let name = 'remoteHauler-' + flag.name;
                 creep.name = name;
@@ -150,13 +145,13 @@ var mod = {
 
                 // save queued creep to task memory
                 memory.queued.hauler.push({
-                    room: room.name,
+                    room: roomName,
                     name: name
                 });
             }
         }
 
-        if(claimerCount < REMOTE_CLAIMER_MULTIPLIER && room.controller && !room.controller.my && (!room.controller.reservation || room.controller.reservation.ticksToEnd < 2000)) {
+        if(claimerCount < REMOTE_CLAIMER_MULTIPLIER && room && room.controller && !room.controller.my && (!room.controller.reservation || room.controller.reservation.ticksToEnd < 2000)) {
             let creep = Creep.setup.claimer.buildParams(spawnRoom.structures.spawns[0]);
             let name = 'claimer-' + flag.name;
             creep.name = name;
@@ -172,7 +167,7 @@ var mod = {
 
             // save queued creep to task memory
             memory.queued.claimer.push({
-                room: room.name,
+                room: roomName,
                 name: name
             });
         }
@@ -193,7 +188,7 @@ var mod = {
 
             // save queued creep to task memory
             memory.queued.worker.push({
-                room: room.name,
+                room: roomName,
                 name: name
             });
         }
