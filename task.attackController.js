@@ -1,56 +1,52 @@
-// This task will react on exploit, reserve and remotemine flags, sending a reserving creep to the flags position.
-module.exports = {
+// This task will react on green/purple flags, sending a giant (RCL7 Req) claiming creep to the flags position.
+var mod = {
     // hook into events
     register: () => {
+       // console.log("test")
         // when a new flag has been found (occurs every tick, for each flag)
-        Flag.found.on( flag => Task.reserve.handleFlagFound(flag) );
+        Flag.found.on( flag => Task.attackController.handleFlagFound(flag) );
         // a creep starts spawning
-        Creep.spawningStarted.on( params => Task.reserve.handleSpawningStarted(params) );
+        Creep.spawningStarted.on( params => Task.attackController.handleSpawningStarted(params) );
         // a creep completed spawning
-        Creep.spawningCompleted.on( creep => Task.reserve.handleSpawningCompleted(creep) );
+        Creep.spawningCompleted.on( creep => Task.attackController.handleSpawningCompleted(creep) );
         // a creep will die soon
-        Creep.predictedRenewal.on( creep => Task.reserve.handleCreepDied(creep.name) );
+        Creep.predictedRenewal.on( creep => Task.attackController.handleCreepDied(creep.name) );
         // a creep died
-        Creep.died.on( name => Task.reserve.handleCreepDied(name) );
+        Creep.died.on( name => Task.attackController.handleCreepDied(name) );
     },
     // for each flag
     handleFlagFound: flag => {
-        // if it is a reserve, exploit or remote mine flag
-        if( flag.color == FLAG_COLOR.claim.reserve.color && flag.secondaryColor == FLAG_COLOR.claim.reserve.secondaryColor ||
-            flag.color == FLAG_COLOR.invade.exploit.color && flag.secondaryColor == FLAG_COLOR.invade.exploit.secondaryColor){
-            // flag.color == FLAG_COLOR.claim.mining.color && flag.secondaryColor == FLAG_COLOR.claim.mining.secondaryColor
-
+        // if it is a yellow/yellow flag
+        if( flag.color == FLAG_COLOR.claim.attackController.color && flag.secondaryColor == FLAG_COLOR.claim.attackController.secondaryColor ){
             // check if a new creep has to be spawned
-            
-            Task.reserve.checkForRequiredCreeps(flag);
+          
+            Task.attackController.checkForRequiredCreeps(flag);
         }
     },
     // check if a new creep has to be spawned
     checkForRequiredCreeps: (flag) => {
-        //only when controller is under 2500 ticks
-        if( flag && flag.room && flag.room.controller && flag.room.controller.reservation && flag.room.controller.reservation.ticksToEnd > 2500) return;
         // get task memory
-        let memory = Task.reserve.memory(flag);
+        let memory = Task.attackController.memory(flag);
         // count creeps assigned to task
         let count = memory.queued.length + memory.spawning.length + memory.running.length;
-        // if creep count below requirement spawn a new creep creep 
+        // if creep count below requirement spawn a new creep creep
         if( count < 1 ) {
             // get nearest room
             let room = Room.bestSpawnRoomFor(flag.pos.roomName);
             // define new creep
-            let fixedBody = [CLAIM, MOVE, CLAIM, MOVE];
-            let multiBody = [CLAIM, MOVE];
-            let name = 'reserve-' + flag.pos.roomName;
+            let fixedBody = [CLAIM, MOVE, CLAIM, MOVE, CLAIM, MOVE, CLAIM, MOVE, CLAIM, MOVE];
+            let multiBody = [];
+            let name = 'Attacker-' + flag.name;
             let creep = {
                 parts: Creep.Setup.compileBody(room, fixedBody, multiBody, true),
                 name: name,
                 behaviour: 'claimer',
                 setup: 'claimer',
-                destiny: { task: "reserve", flagName: flag.name }
+                destiny: { task: "attackController", flagName: flag.name }
             };
             if( creep.parts.length === 0 ) {
                 // creep has no body. 
-                global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'reserve Flag tried to queue a zero parts body creep. Aborted.' ));
+                global.logSystem(flag.pos.roomName, dye(CRAYON.error, 'attackController Flag tried to queue a zero parts body creep. Aborted.' ));
                 return;
             }
             // queue creep for spawning
@@ -65,13 +61,13 @@ module.exports = {
     // when a creep starts spawning
     handleSpawningStarted: params => { // params: {spawn: spawn.name, name: creep.name, destiny: creep.destiny}
         // ensure it is a creep which has been queued by this task (else return)
-        if ( !params.destiny || !params.destiny.task || params.destiny.task != 'reserve' )
+        if ( !params.destiny || !params.destiny.task || params.destiny.task != 'attackController' )
             return;
         // get flag which caused queueing of that creep
         let flag = Game.flags[params.destiny.flagName];
         if (flag) {
             // get task memory
-            let memory = Task.reserve.memory(flag);
+            let memory = Task.attackController.memory(flag);
             // save spawning creep to task memory
             memory.spawning.push(params);
             // clean/validate task memory queued creeps
@@ -89,7 +85,7 @@ module.exports = {
     // when a creep completed spawning
     handleSpawningCompleted: creep => {
         // ensure it is a creep which has been requested by this task (else return)
-        if (!creep.data || !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != 'reserve')
+        if (!creep.data || !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != 'attackController')
             return;
         // get flag which caused request of that creep
         let flag = Game.flags[creep.data.destiny.flagName];
@@ -99,7 +95,7 @@ module.exports = {
             creep.data.predictedRenewal = creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName)*50);
 
             // get task memory
-            let memory = Task.reserve.memory(flag);
+            let memory = Task.attackController.memory(flag);
             // save running creep to task memory
             memory.running.push(creep.name);
             // clean/validate task memory spawning creeps
@@ -120,20 +116,20 @@ module.exports = {
         // get creep memory
         let mem = Memory.population[name];
         // ensure it is a creep which has been requested by this task (else return)
-        if (!mem || !mem.destiny || !mem.destiny.task || mem.destiny.task != 'reserve')
+        if (!mem || !mem.destiny || !mem.destiny.task || mem.destiny.task != 'attackController')
             return;
         // get flag which caused request of that creep
         let flag = Game.flags[mem.destiny.flagName];
         if (flag) {
             // get task memory
-            let memory = Task.reserve.memory(flag);
+            let memory = Task.attackController.memory(flag);
             // clean/validate task memory running creeps
             let running = []
             let validateRunning = o => {
                 let creep = Game.creeps[o];
                 // invalidate old creeps for predicted spawning
                 // TODO: better distance calculation
-                if( creep && creep.name != name && creep.data !== undefined && creep.data.spawningTime !== undefined && creep.ticksToLive > (creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName)*25) ) ) {
+                if( creep && creep.name != name && creep.data !== undefined && creep.data.spawningTime !== undefined && creep.ticksToLive > (creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName)*50) ) ) {
                     running.push(o);
                 }
             };
@@ -145,26 +141,25 @@ module.exports = {
     memory: (flag) => {
         if( !flag.memory.tasks ) 
             flag.memory.tasks = {};
-        if( !flag.memory.tasks.reserve ) {
-            flag.memory.tasks.reserve = {
+        if( !flag.memory.tasks.attackController ) {
+            flag.memory.tasks.attackController = {
                 queued: [], 
                 spawning: [],
                 running: []
             }
         }
-        return flag.memory.tasks.reserve;
+        return flag.memory.tasks.attackController;
     },
 
     nextAction: creep => {
         // override behaviours nextAction function
         // this could be a global approach to manipulate creep behaviour
 
-        //Reserve if possible, if not (should be never) then recycle
+        //Attack, then claim, then recycle
         let priority = [
-            Creep.action.reserving,
+            Creep.action.attackController,
             Creep.action.recycling
         ];
-      //  console.log("bingo")
         for(var iAction = 0; iAction < priority.length; iAction++) {
             var action = priority[iAction];
             if(action.isValidAction(creep) &&
@@ -174,8 +169,7 @@ module.exports = {
             }
         }
     }
- 
 
 };
 
-
+module.exports = mod; 
