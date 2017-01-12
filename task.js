@@ -5,6 +5,7 @@ var mod = {
     mining: load("task.mining"),
     claim: load("task.claim"),
     reserve: load("task.reserve"),
+    attackController: load("task.attackController"),
 
     // register tasks (hook up into events)
     register: function () {
@@ -13,7 +14,8 @@ var mod = {
             Task.defense,
             Task.claim,
             Task.reserve,
-            Task.mining
+            Task.reserve,
+            Task.attackController
         ];
         var loop = task => {
             task.register();
