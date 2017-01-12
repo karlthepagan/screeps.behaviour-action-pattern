@@ -759,6 +759,15 @@ var mod = {
                     return this.memory.spawnQueueHigh;
                 }
             },
+            'setupQueueHigh': { // room.setupQueueHigh.map(i=>i.type) to debug
+                configurable: true,
+                get: function() {
+                    if( _.isUndefined(this._setupQueueHigh) ) {
+                        this._setupQueueHigh = Creep.setupQueue('highPriority', this.controller.level);
+                    }
+                    return this._setupQueueHigh;
+                }
+            },
             'spawnQueueMedium': {
                 configurable: true,
                 get: function() {
@@ -766,6 +775,15 @@ var mod = {
                         this.memory.spawnQueueMedium = [];
                     }
                     return this.memory.spawnQueueMedium;
+                }
+            },
+            'setupQueueLow': {
+                configurable: true,
+                get: function() {
+                    if( _.isUndefined(this._setupQueueLow) ) {
+                        this._setupQueueLow = Creep.setupQueue('lowPriority', this.controller.level);
+                    }
+                    return this._setupQueueLow;
                 }
             },
             'spawnQueueLow': {

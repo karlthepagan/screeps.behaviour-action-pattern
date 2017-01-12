@@ -59,6 +59,12 @@ var mod = {
             _.forEach(Game.creeps, run);
         };
 
+        Creep.setupQueue = _.memoize(function(priority, rcl) {
+            return _.chain(Creep.setup).values()
+                .map(s => ({s, v: s.RCL[rcl][priority]}))
+                .filter("v").sortBy("v").reverse().map("s").value();
+        });
+
         Creep.prototype.findGroupMemberByType = function(creepType, flagName) {
             let creep;
 
