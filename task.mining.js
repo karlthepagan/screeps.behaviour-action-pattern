@@ -92,7 +92,7 @@ var mod = {
         if( !memory.queued.hasOwnProperty('worker') )
             memory.queued.worker = [];
 
-        if( !memory.hasOwnProperty('sources') ){
+        if( room && !memory.hasOwnProperty('sources') ){
             memory.sources = [];
             let sources = room.find(FIND_SOURCES);
             for(x=0; x<sources.length;x++)
