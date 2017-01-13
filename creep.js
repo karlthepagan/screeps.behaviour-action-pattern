@@ -258,6 +258,10 @@ var mod = {
                 else
                     this.data.path = this.getPath( targetPos, true);
 
+                if( DEBUG && this.name === Memory.debug.path ) {
+                    console.log(this.name, 'pathing', this.pos, '>', targetPos, this.data.path, range, enoughRange);
+                }
+
                 if( this.data.path && this.data.path.length > 0 ) {
                     let moveResult = this.move(this.data.path.charAt(0));
                     if( moveResult == OK ) { // OK is no guarantee that it will move to the next pos.
@@ -265,7 +269,7 @@ var mod = {
                     } else logErrorCode(this, moveResult);
                     if( moveResult == ERR_NOT_FOUND ) delete this.data.path;
                 } else if( range > enoughRange ) {
-                    this.say('NO PATH!');
+                    this.say('NO PATH1');
                     this.data.targetId = null;
                     this.leaveBorder();
                 }
@@ -278,12 +282,16 @@ var mod = {
                 if( !this.data.path || this.data.path.length == 0 )
                     this.data.path = this.getPath( targetPos, true);
 
+                if( DEBUG && this.name === Memory.debug.path ) {
+                    console.log(this.name, 'auto', this.pos, '>', targetPos, this.data.path, range, enoughRange);
+                }
+
                 if( this.data.path && this.data.path.length > 0 ) {
                     let moveResult = this.move(this.data.path.charAt(0));
                     if( moveResult != OK ) logErrorCode(this, moveResult);
                     if( moveResult == ERR_NOT_FOUND ) delete this.data.path;
                 } else if( range > enoughRange ) {
-                    this.say('NO PATH!');
+                    this.say('NO PATH2');
                     this.data.targetId = null;
                     this.leaveBorder();
                 }
@@ -295,13 +303,18 @@ var mod = {
                     delete this.data.path;
                     this.data.path = this.getPath( targetPos, false);
                 }
+
+                if( DEBUG && this.name === Memory.debug.path ) {
+                    console.log(this.name, 'evade', this.pos, '>', targetPos, this.data.path, range, enoughRange);
+                }
+
                 if( this.data.path && this.data.path.length > 0 ) {
                     if( this.data.path.length > 5 )
                         this.data.path = this.data.path.substr(0,4);
                     let moveResult = this.move(this.data.path.charAt(0));
                     if( moveResult != OK ) logErrorCode(this, moveResult);
                 } else if( range > enoughRange ){
-                    this.say('NO PATH!');
+                    this.say('NO PATH3');
                     this.data.targetId = null;
                     this.leaveBorder();
                 }
@@ -319,8 +332,24 @@ var mod = {
                 serialize: true,
                 ignoreCreeps: ignoreCreeps
             });
-            if( path && path.length > 4 )
+
+            if( DEBUG && this.name === Memory.debug.path ) {
+                console.log(this.name, 'getpath', this.pos, '>', targetPos, path);
+            }
+
+            if( path && path.length > 4 ) {
+                const x = +path.substr(0,2);
+                const y = +path.substr(2,2);
+                if( this.pos.x !== x || this.pos.y !== y ) {
+                    const dir = this.pos.getDirectionTo(new RoomPosition(x, y, this.pos.roomName));
+                    if( DEBUG && this.name === Memory.debug.path ) {
+                        console.log(this.name, 'correcting path', this.pos.roomName, x, y, '>', this.pos.x, this.pos.y, dir);
+                    }
+                    return dir + path.substr(4);
+                }
+
                 return path.substr(4);
+            }
             else return null;
         };
         Creep.prototype.fleeMove = function() {

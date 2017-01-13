@@ -288,7 +288,7 @@ var mod = {
         });
         // END LOCAL REFERENCES ONLY
 
-        if( !Memory.debug ) Memory.debug = {};
+        if( DEBUG && !Memory.debug ) Memory.debug = {};
 
         // Load extension functions
         Creep.extend = load("creep").extend;
