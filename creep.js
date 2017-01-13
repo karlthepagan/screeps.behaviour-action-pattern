@@ -162,7 +162,8 @@ var mod = {
                     behaviour = Creep.behaviour[this.data.creepType];
                 }                
                 this.repairNearby();
-                if( behaviour ) behaviour.run(this);
+                if( this.leaveBorder(true) ) this.honkEvade();
+                else if( behaviour ) behaviour.run(this);
                 else if(!this.data){
                     let type = this.memory.setup;
                     let weight = this.memory.cost;
@@ -215,19 +216,36 @@ var mod = {
                 }
             }
         };
-        Creep.prototype.leaveBorder = function() {
-            // if on border move away
-            // for emergency case, Path not found
+        Creep.prototype.leaveBorder = function(lazy) {
+            // lazy: if on border check moving away
+            // !lazy: emergency case, Path not found
+            let dir = 0;
             if( this.pos.y == 0 ){
-                this.move(BOTTOM);
+                dir = BOTTOM;
             } else if( this.pos.x == 0  ){
-                this.move(RIGHT);
+                dir = RIGHT;
             } else if( this.pos.y == 49  ){
-                this.move(TOP);
+                dir = TOP;
             } else if( this.pos.x == 49  ){
-                this.move(LEFT);
+                dir = LEFT;
             }
             // TODO: CORNER cases
+            if( dir === 0) {
+                return false;
+            }
+
+            const pathDir = this.data.path && this.data.path.length ? +this.data.path[0] : dir;
+
+            if( !(this.data.path && this.data.path.length)) {
+                console.log(this.name, this.pos, 'path terminated at border');
+            } else if( lazy && dir === pathDir ) {
+                console.log(this.name, this.pos, 'proceeding as planned');
+                return false;
+            }
+
+            this.data.path = this.data.path ? this.data.path.substr(1) : null;
+            this.move(pathDir);
+            return true;
         };
         Creep.prototype.honk = function(){
             if( HONK ) this.say('\u{26D4}\u{FE0E}', SAY_PUBLIC);
@@ -338,16 +356,6 @@ var mod = {
             }
 
             if( path && path.length > 4 ) {
-                const x = +path.substr(0,2);
-                const y = +path.substr(2,2);
-                if( this.pos.x !== x || this.pos.y !== y ) {
-                    const dir = this.pos.getDirectionTo(new RoomPosition(x, y, this.pos.roomName));
-                    if( DEBUG && this.name === Memory.debug.path ) {
-                        console.log(this.name, 'correcting path', this.pos.roomName, x, y, '>', this.pos.x, this.pos.y, dir);
-                    }
-                    return dir + path.substr(4);
-                }
-
                 return path.substr(4);
             }
             else return null;
