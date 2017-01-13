@@ -239,7 +239,7 @@ var mod = {
             if( !(this.data.path && this.data.path.length)) {
                 console.log(this.name, this.pos, 'path terminated at border');
             } else if( lazy && dir === pathDir ) {
-                console.log(this.name, this.pos, 'proceeding as planned');
+                // console.log(this.name, this.pos, 'proceeding as planned');
                 return false;
             }
 
