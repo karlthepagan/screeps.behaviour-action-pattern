@@ -14,7 +14,7 @@ var mod = {
             Task.defense,
             Task.claim,
             Task.reserve,
-            Task.reserve,
+            Task.mining,
             Task.attackController
         ];
         var loop = task => {

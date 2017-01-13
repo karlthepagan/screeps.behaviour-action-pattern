@@ -67,7 +67,7 @@ var mod = {
                     mining: {
                         color: COLOR_GREEN,
                         secondaryColor: COLOR_BROWN,
-                        filter: {'color': COLOR_WHITE, 'secondaryColor': COLOR_BROWN}
+                        filter: {'color': COLOR_GREEN, 'secondaryColor': COLOR_BROWN}
                     },
                     attackController: { // attack enemy controller and then claim
                         color: COLOR_GREEN,
@@ -287,6 +287,8 @@ var mod = {
             }
         });
         // END LOCAL REFERENCES ONLY
+
+        if( !Memory.debug ) Memory.debug = {};
 
         // Load extension functions
         Creep.extend = load("creep").extend;

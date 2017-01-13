@@ -32,6 +32,7 @@ var mod = {
     //     _.forEach(Object.keys(flagMemory.names), keepOrDelete)
     // },
     handleFlagFound: flag => {
+        debugger;
         if( Task.mining.checkFlag(flag) ){
             // check if a new creep has to be spawned
             Task.mining.checkForRequiredCreeps(flag);
@@ -107,6 +108,11 @@ var mod = {
         let claimerCount = memory.queued.claimer.length + _.filter(Game.creeps, function(c){return c.data && c.data.destiny && c.data.creepType=='claimer' && c.data.destiny.room==roomName;}).length;
         let workerCount = memory.queued.worker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==roomName;}).length;
 
+        if (DEBUG && (Memory.debug.setup || Memory.debug.setupType === 'mining')) {
+            console.log(spawnRoom, 'mining checking for flag:', flag.pos, JSON.stringify({
+                sourceCount, haulerCount, minerCount, claimerCount, workerCount,}));
+        }
+
         if(minerCount < sourceCount) {
             for(var i = 0; i < sourceCount; i++) {
                 let name = 'remoteMiner-' + flag.name;
@@ -115,8 +121,8 @@ var mod = {
                 creep.destiny = { task: "mining", role: "miner", flagName: flag.name, room: flag.pos.roomName };
                 if( creep.parts.length === 0 ) {
                     // creep has no body.
-                    global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body miner. Aborted.' ));
-                    return;
+                    if( DEBUG ) global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body miner. Aborted.' ));
+                    break;
                 }
                 // queue creep for spawning
                 spawnRoom.spawnQueueLow.push(creep);
@@ -137,8 +143,8 @@ var mod = {
                 creep.destiny = { task: "mining", role: "hauler", flagName: flag.name, room: flag.pos.roomName };
                 if( creep.parts.length === 0 ) {
                     // creep has no body.
-                    global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body hauler. Aborted.' ));
-                    return;
+                    if( DEBUG ) global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body hauler. Aborted.' ));
+                    break;
                 }
                 // queue creep for spawning
                 spawnRoom.spawnQueueLow.push(creep);
@@ -152,45 +158,49 @@ var mod = {
         }
 
         if(claimerCount < REMOTE_CLAIMER_MULTIPLIER && room && room.controller && !room.controller.my && (!room.controller.reservation || room.controller.reservation.ticksToEnd < 2000)) {
-            let creep = Creep.setup.claimer.buildParams(spawnRoom.structures.spawns[0]);
-            let name = 'claimer-' + flag.name;
-            creep.name = name;
-            creep.destiny = { task: "mining", role: "claimer", flagName: flag.name, room: flag.pos.roomName };
-            if( creep.parts.length === 0 ) {
-                // creep has no body.
-                global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body claimer. Aborted.' ));
-                return;
-            }
+            do {
+                let creep = Creep.setup.claimer.buildParams(spawnRoom.structures.spawns[0]);
+                let name = 'claimer-' + flag.name;
+                creep.name = name;
+                creep.destiny = {task: "mining", role: "claimer", flagName: flag.name, room: flag.pos.roomName};
+                if (creep.parts.length === 0) {
+                    // creep has no body.
+                    // if( DEBUG ) global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body claimer. Aborted.'));
+                    break;
+                }
 
-            // queue creep for spawning
-            spawnRoom.spawnQueueLow.push(creep);
+                // queue creep for spawning
+                spawnRoom.spawnQueueLow.push(creep);
 
-            // save queued creep to task memory
-            memory.queued.claimer.push({
-                room: roomName,
-                name: name
-            });
+                // save queued creep to task memory
+                memory.queued.claimer.push({
+                    room: roomName,
+                    name: name
+                });
+            } while(false); // break goto
         }
 
         if(workerCount < REMOTE_WORKER_MULTIPLIER) {
-            let creep = Creep.setup.remoteWorker.buildParams(spawnRoom.structures.spawns[0]);
-            let name = 'remoteWorker-' + flag.name;
-            creep.name = name;
-            creep.destiny = { task: "mining", role: "worker", flagName: flag.name, room: flag.pos.roomName };
-            if( creep.parts.length === 0 ) {
-                // creep has no body.
-                global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body worker. Aborted.' ));
-                return;
-            }
+            do {
+                let creep = Creep.setup.remoteWorker.buildParams(spawnRoom.structures.spawns[0]);
+                let name = 'remoteWorker-' + flag.name;
+                creep.name = name;
+                creep.destiny = {task: "mining", role: "worker", flagName: flag.name, room: flag.pos.roomName};
+                if (creep.parts.length === 0) {
+                    // creep has no body.
+                    if( DEBUG ) global.logSystem(spawnRoom.name, dye(CRAYON.error, 'Mining Flag tried to queue a zero parts body worker. Aborted.'));
+                    break;
+                }
 
-            // queue creep for spawning
-            spawnRoom.spawnQueueLow.push(creep);
+                // queue creep for spawning
+                spawnRoom.spawnQueueLow.push(creep);
 
-            // save queued creep to task memory
-            memory.queued.worker.push({
-                room: roomName,
-                name: name
-            });
+                // save queued creep to task memory
+                memory.queued.worker.push({
+                    room: roomName,
+                    name: name
+                });
+            } while(false);
         }
     },
     memory: key => {
