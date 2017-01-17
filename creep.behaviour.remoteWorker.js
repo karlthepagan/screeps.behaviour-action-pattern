@@ -1,6 +1,7 @@
 let mod = {};
 module.exports = mod;
 mod.name = 'remoteWorker';
+mod.chargedEnergy = creep => creep.carryCapacity * 0.25;
 mod.run = function(creep) {
     // Assign next Action
     let oldTargetId = creep.data.targetId;
@@ -22,7 +23,7 @@ mod.nextAction = function(creep){
     if( creep.data.destiny.room == creep.pos.roomName ){
         let priority;
         // get some energy
-        if( creep.sum < creep.carryCapacity * 0.8 ) {
+        if( creep.sum < this.chargedEnergy(creep) ) {
             priority = [
                 Creep.action.picking,
                 Creep.action.uncharging,

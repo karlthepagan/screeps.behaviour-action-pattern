@@ -1,13 +1,14 @@
 let mod = {};
 module.exports = mod;
 mod.name = 'privateer';
+mod.chargedEnergy = creep => creep.carryCapacity * 0.4;
 mod.run = function(creep) {
     // Assign next Action
     let oldTargetId = creep.data.targetId;
     if( creep.action == null  || creep.action.name == 'idle' ) {
         if( creep.data.destiny && creep.data.destiny.task && Task[creep.data.destiny.task] && Task[creep.data.destiny.task].nextAction )
         Task[creep.data.destiny.task].nextAction(creep);
-                    
+
         else this.nextAction(creep);
     }
     if( creep.data.targetId != oldTargetId ) {
@@ -74,7 +75,7 @@ mod.nextAction = function(creep){
             }
 
             // get some energy
-            if( creep.sum < creep.carryCapacity*0.4 ) {
+            if( creep.sum < this.chargedEnergy(creep) ) {
                 // sources depleted
                 if( creep.room.sourceEnergyAvailable == 0 ){
                     // cloak flag
