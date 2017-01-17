@@ -3,14 +3,15 @@ module.exports = mod;
 // register tasks (hook up into events)
 mod.register = function () {
     let tasks = [
-        Task.guard, 
+        Task.guard,
         Task.defense,
         Task.claim,
         Task.reserve,
         Task.mining,
         Task.pioneer,
         Task.attackController,
-        Task.robbing
+        Task.robbing,
+        Task.diplomacy,
     ];
     var loop = task => {
         task.register();
@@ -27,7 +28,16 @@ mod.clearMemory = (task, s) => {
     if( Memory.tasks[task] && Memory.tasks[task][s] )
         delete Memory.tasks[task][s];
 };
-mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, destiny, onQueued) => {  
+mod.cache = (task, s) => {
+    if( !cache[task] ) cache[task] = {};
+    if( !cache[task][s] ) cache[task][s] = {};
+    return cache[task][s];
+};
+mod.clearCache = (task, s) => {
+    if( cache[task] && cache[task][s] )
+        delete cache[task][s];
+};
+mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, destiny, onQueued) => {
     // get nearest room
     let room = Room.bestSpawnRoomFor(targetRoomName);
     if( Task[taskName].minControllerLevel && room.controller.level < Task[taskName].minControllerLevel ) return;
@@ -41,11 +51,11 @@ mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, d
         parts: Creep.compileBody(room, creepDefinition.fixedBody, creepDefinition.multiBody, true),
         name: name,
         behaviour: creepDefinition.behaviour,
-        destiny: destiny, 
+        destiny: destiny,
         queueRoom: room.name
     };
     if( creepSetup.parts.length === 0 ) {
-        // creep has no body. 
+        // creep has no body.
         global.logSystem(flag.pos.roomName, dye(CRAYON.error, `${taskName} task tried to queue a zero parts body ${creepDefinition.behaviour} creep. Aborted.` ));
         return;
     }
@@ -55,3 +65,4 @@ mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, d
     // save queued creep to task memory
     if( onQueued ) onQueued(creepSetup);
 };
+const cache = {};
