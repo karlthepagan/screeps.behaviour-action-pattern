@@ -23,26 +23,43 @@ action.newTarget = function(creep){
         }
     }
 
-    var that = this;
     if( creep.room.structures.container.in.length > 0 ) {
-        let min;
-        if( creep.data.creepType.indexOf('remote') > 0 ) min = 250;
-        else min = 500;
-        // take from fullest IN container having energy
-        let target = null;
-        let filling = 0;
-        let fullest = cont => {
+        const targets = _.chain(creep.room.structures.container.in).map(action.energyMoveScore(creep))
+            .filter("score").sortBy("score").reverse().value();
+        const scoredTarget = targets[0];
+        return scoredTarget || null && scoredTarget.cont;
+    }
+};
+action.energyMoveScore = function(creep) {
+    if (creep.getActiveBodyparts(WORK) > 1) {
+        // take from closest IN container that will put us to work
+        let min = creep.body.carry * 25;
+        const chargedEnergy = Creep.behaviour[creep.data.creepType].chargedEnergy
+        if(creep.data && creep.data.creepType && chargedEnergy) {
+            if(typeof chargedEnergy === "function") min = chargedEnergy(creep) || min;
+            else min = chargedEnergy || min;
+        }
+        return function(cont) {
             let contFilling = cont.sum;
             if( cont.targetOf )
                 contFilling -= _.sum( cont.targetOf.map( t => ( t.actionName == 'uncharging' ? t.carryCapacityLeft : 0 )));
-            if( contFilling < Math.min(creep.carryCapacity - creep.sum, min) ) return;
-            if( contFilling > filling ){
-                filling = contFilling ;
-                target = cont;
-            }
+
+            let score = -creep.pos.getRangeTo(cont.pos);
+            if( contFilling < Math.min(creep.carryCapacity - creep.sum, min) ) score = 0;
+            return {cont, score};
+        }
+        // TODO road vs offroad sort
+    } else {
+        // take from fullest IN container having energy
+        const min = creep.data.creepType.indexOf('remote') > 0 ? 250 : 500;
+        return function(cont) {
+            let score = cont.sum;
+            if( cont.targetOf )
+                score -= _.sum( cont.targetOf.map( t => ( t.actionName == 'uncharging' ? t.carryCapacityLeft : 0 )));
+
+            if( score < Math.min(creep.carryCapacity - creep.sum, min) ) score = 0;
+            return {cont, score}
         };
-        _.forEach(creep.room.structures.container.in, fullest);
-        return target;
     }
 };
 action.work = function(creep){

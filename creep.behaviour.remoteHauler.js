@@ -1,6 +1,7 @@
 let mod = {};
 module.exports = mod;
 mod.name = 'remoteHauler';
+mod.chargedEnergy = creep => creep.carryCapacity * 0.8;
 mod.run = function(creep) {
     // Assign next Action
     let oldTargetId = creep.data.targetId;
@@ -49,7 +50,7 @@ mod.nextAction = function(creep){
     // at target room
     else if( creep.data.destiny.room == creep.pos.roomName ){
         // if it's not full
-        if( creep.sum < (creep.carryCapacity*0.8) ) {
+        if( creep.sum < this.chargedEnergy(creep) ) {
             // get some energy
             if( this.assign(creep, Creep.action.picking) ) return;
             if( this.assign(creep, Creep.action.uncharging) ) return;

@@ -1,6 +1,7 @@
 let mod = {};
 module.exports = mod;
 mod.name = 'hauler';
+mod.chargedEnergy = creep => creep.carryCapacity * 0.5;
 mod.run = function(creep) {
     // Assign next Action
     let oldTargetId = creep.data.targetId;
@@ -21,7 +22,7 @@ mod.nextAction = function(creep){
         return;
     }
     let priority;
-    if( creep.sum < creep.carryCapacity/2 ) {
+    if( creep.sum < this.chargedEnergy(creep) ) {
         priority = [
             Creep.action.uncharging,
             Creep.action.picking,

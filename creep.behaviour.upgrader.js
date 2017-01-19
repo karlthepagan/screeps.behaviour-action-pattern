@@ -1,6 +1,7 @@
 let mod = {};
 module.exports = mod;
 mod.name = 'upgrader';
+mod.chargedEnergy = creep => creep.getActiveBodyparts(WORK) || (creep.carryCapacity * 0.5);
 mod.approach = function(creep){
     let targetPos = new RoomPosition(creep.data.determinatedSpot.x, creep.data.determinatedSpot.y, creep.pos.roomName);
     let range = creep.pos.getRangeTo(targetPos);
@@ -45,12 +46,12 @@ mod.run = function(creep) {
 
         args.where = pos => { return !_.some(invalid,{x:pos.x,y:pos.y}); };
         let spots = Room.fieldsInRange(args);
-        if( spots.length == 0 ){ 
+        if( spots.length == 0 ){
             // no position found. allow pos near sources
             args.where = pos => { return !_.some(taken,{x:pos.x,y:pos.y}); };
             spots = Room.fieldsInRange(args);
         }
-        if( spots.length == 0 ){ 
+        if( spots.length == 0 ){
             // no position found. allow any
             delete args.where;
             spots = Room.fieldsInRange(args);
@@ -82,7 +83,7 @@ mod.run = function(creep) {
         if(CHATTY) creep.say('upgrading', SAY_PUBLIC);
         let range = this.approach(creep);
         if( range == 0 ){
-            let carryThreshold = (creep.data.body&&creep.data.body.work ? creep.data.body.work : (creep.carryCapacity/2));
+            let carryThreshold = this.chargedEnergy(creep);
             if( creep.carry.energy <= carryThreshold ){
                 let store = creep.room.structures.links.controller.find(l => l.energy > 0);
                 if( !store ) store = creep.room.structures.container.controller.find(l => l.store.energy > 0);
