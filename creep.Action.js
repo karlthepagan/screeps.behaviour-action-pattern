@@ -46,9 +46,21 @@ let Action = function(actionName){
     this.newTarget = function(creep){
         return null;
     };
+    this.formatPos = function(pos){
+        return [pos.x, pos.y];
+    };
+    this.chat = function(creep){
+        if(CHATTY) {
+            if( Game.time % 2 && creep.target && creep.target.pos ) {
+                creep.say(this.formatPos(creep.target.pos), SAY_PUBLIC);
+            } else {
+                creep.say(this.name, SAY_PUBLIC);
+            }
+        }
+    };
     // order for the creep to execute each tick, when assigned to that action
     this.step = function(creep){
-        if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+        this.chat(creep);
         let range = creep.pos.getRangeTo(creep.target);
         if( range <= this.targetRange ) {
             var workResult = this.work(creep);

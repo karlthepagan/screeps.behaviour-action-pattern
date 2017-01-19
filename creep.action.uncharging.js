@@ -26,8 +26,9 @@ action.newTarget = function(creep){
     if( creep.room.structures.container.in.length > 0 ) {
         const targets = _.chain(creep.room.structures.container.in).map(action.energyMoveScore(creep))
             .filter("score").sortBy("score").reverse().value();
+        // if( DEBUG && TRACE ) trace('Behaviour', {actionName:'travelling', behaviourName:this.name, creepName:creep.name, assigned: true, Behaviour:'nextAction', Action:'assign'});
         const scoredTarget = targets[0];
-        return scoredTarget || null && scoredTarget.cont;
+        return scoredTarget && scoredTarget.cont || null;
     }
 };
 action.energyMoveScore = function(creep) {

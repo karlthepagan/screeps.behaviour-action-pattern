@@ -63,8 +63,8 @@ let Setup = function(typeName){
     this.isValidSetup = function(room){
         let rcl = room.controller.level;
         if( rcl < this.minControllerLevel ) {
-            return false;
             if (DEBUG && TRACE) trace('Setup', {setupType:this.type, room:room.name, rcl, Setup:'isValidSetup'}, 'low RCL');
+            return false;
         }
 
         rcl = this.RCL[room.controller.level];

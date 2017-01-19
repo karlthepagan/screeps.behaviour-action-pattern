@@ -246,6 +246,7 @@ module.exports.loop = function () {
 
     // Register event hooks
     Creep.register();
+    Spawn.register();
     Task.register();
     // custom register
     if( global.mainInjection.register ) global.mainInjection.register();

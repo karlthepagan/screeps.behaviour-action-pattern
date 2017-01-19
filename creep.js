@@ -332,6 +332,19 @@ mod.extend = function(){
                 }
                 return this._threat;
             }
+        },
+        'trace': { // only valid on one creep at a time
+            configurable: true,
+            get: function() {
+                return Memory.debugTrace.creepName === this.name;
+            },
+            set: function(value) {
+                if (value) {
+                    Memory.debugTrace.creepName = this.name;
+                } else if (this.trace) {
+                    delete Memory.debugTrace.creepName;
+                }
+            }
         }
     });
 

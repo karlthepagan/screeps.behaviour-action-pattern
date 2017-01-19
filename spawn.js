@@ -97,6 +97,13 @@ mod.extend = function(){
         return false;
     };
 };
+mod.register = function(){
+    Creep.spawningCompleted.on( creep => mod.handleSpawningCompleted(creep) );
+};
+mod.handleSpawningCompleted = function(creep){
+    if( DEBUG && TRACE ) trace('Spawn', {behaviour:creep.data.creepType, creepName:creep.name, Spawn:'Creep.spawningCompleted'});
+    if(CENSUS_ANNOUNCEMENTS) console.log( dye(CRAYON.system, creep.pos.roomName  + ' &gt; ') + dye(CRAYON.birth, 'Off to work ' + creep.name + '!') );
+};
 mod.execute = function(){
     let run = spawn => {
         if(spawn.room.my) spawn.execute();

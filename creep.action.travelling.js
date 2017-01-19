@@ -4,8 +4,9 @@ action.isValidTarget = function(target){ return target != null; };
 action.isAddableAction = function(){ return true; };
 action.isAddableTarget = function(){ return true; };
 action.newTarget = function(creep){ return null; }
+action.formatPos = pos => pos.roomName;
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+    this.chat(creep);
     if( creep.target ){
         let pos;
         if( creep.target.id == creep.id ) pos = new RoomPosition(25, 25, creep.data.travelRoom);

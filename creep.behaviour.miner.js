@@ -9,8 +9,8 @@ mod.approach = function(creep){
     return range;
 };
 mod.run = function(creep) {
-    if( creep.data.creepType == "miner" && creep.pos.roomName != creep.data.homeRoom && Game.rooms[creep.data.homeRoom] && Game.rooms[creep.data.homeRoom].controller ) {
-        Creep.action.travelling.assign(creep, Game.rooms[creep.data.homeRoom].controller);
+    if( creep.pos.roomName != creep.data.homeRoom && Game.rooms[creep.data.homeRoom] && Game.rooms[creep.data.homeRoom].controller ) {
+        Creep.behaviour.worker.run(creep);
         return;
     }
     let source;

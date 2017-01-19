@@ -1,5 +1,6 @@
 let mod = {};
 module.exports = mod;
+mod.name = 'mining';
 mod.minControllerLevel = 4;
 mod.register = () => {
     // when a new flag has been found (occurs every tick, for each flag)
@@ -12,7 +13,7 @@ mod.register = () => {
 mod.checkFlag = (flag) => {
     if( flag.color == FLAG_COLOR.claim.mining.color && flag.secondaryColor == FLAG_COLOR.claim.mining.secondaryColor ) {
         flag.memory.roomName = flag.pos.roomName;
-        flag.memory.task = 'mining';
+        flag.memory.task = mod.name;
         return true;
     }
     return false;
@@ -20,7 +21,7 @@ mod.checkFlag = (flag) => {
 mod.handleFlagRemoved = flagName => {
     // check flag
     let flagMem = Memory.flags[flagName];
-    if( flagMem && flagMem.task === 'mining' && flagMem.roomName ){
+    if( flagMem && flagMem.task === mod.name && flagMem.roomName ){
         // if there is still a mining flag in that room ignore. 
         let flags = FlagDir.filter(FLAG_COLOR.claim.mining, new RoomPosition(25,25,flagMem.roomName), true);
         if( flags && flags.length > 0 ) 
@@ -28,7 +29,7 @@ mod.handleFlagRemoved = flagName => {
         else {
             // no more mining in that room. 
             // clear memory
-            Task.clearMemory('mining', flagMem.roomName);
+            Task.clearMemory(mod.name, flagMem.roomName);
         }
     }
 };
@@ -41,7 +42,7 @@ mod.handleFlagFound = flag => {
 };
 // remove creep from task memory of queued creeps
 mod.handleSpawningStarted = params => {
-    if ( !params.destiny || !params.destiny.task || params.destiny.task != 'mining' )
+    if ( !params.destiny || !params.destiny.task || params.destiny.task != mod.name )
         return;
     let memory = Task.mining.memory(params.destiny.room);
     if( memory.queued[params.destiny.type] ) memory.queued[params.destiny.type].pop();
@@ -55,7 +56,21 @@ mod.handleSpawningStarted = params => {
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
-    let spawnRoom = Room.bestSpawnRoomFor(flag.pos.roomName);
+    let spawnRoom = Room.findSpawnRoom({
+        targetRoom: flag.pos.roomName,
+        minRCL: mod.minControllerLevel,
+        maxRange: Infinity,
+        minEnergyAvailable: 0,
+        minEnergyCapacity: 0,
+        callBack: null,
+        allowTargetRoom: true,
+        rangeRclRatio: 0.5,
+        rangeQueueRatio: 51});
+    if (!spawnRoom) {
+        if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, Task:'Flag.found'}, 'no spawn room');
+        return;
+    }
+
     const roomName = flag.pos.roomName;
     const room = Game.rooms[roomName];
     // Use the roomName as key in Task.memory?
@@ -78,14 +93,14 @@ mod.checkForRequiredCreeps = (flag) => {
     let workerCount = memory.queued.remoteWorker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==roomName;}).length;
     // TODO: calculate creeps by type needed per source / mineral
 
-    if( DEBUG && TRACE ) trace('Task', {flagName:flag.name, room:spawnRoom, sourceCount, haulerCount, minerCount, workerCount, Task:'Flag.found'}, 'checking flag@', flag.pos);
+    if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, room:spawnRoom.name, sourceCount, haulerCount, minerCount, workerCount, Task:'Flag.found'}, 'checking flag@', flag.pos);
 
     if(minerCount < sourceCount) {
         for(let i = minerCount; i < sourceCount; i++) {
             Task.spawn(
                 'Low', // queue
-                'mining', // taskName
-                flag.pos.roomName, // targetRoom
+                mod.name, // taskName
+                spawnRoom.name, // targetRoom
                 flag.name, // targetName
                 Task.mining.creep.miner, // creepDefinition
                 { type: Task.mining.creep.miner.behaviour }, // custom destiny attributes
@@ -104,7 +119,7 @@ mod.checkForRequiredCreeps = (flag) => {
     let maxHaulers = Math.ceil(runningMiners.length * REMOTE_HAULER_MULTIPLIER);
     if(haulerCount < maxHaulers) {
         for(let i = haulerCount; i < maxHaulers; i++) {
-            Task.spawn('Low', 'mining', flag.pos.roomName, flag.name, Task.mining.creep.hauler, {type: Task.mining.creep.hauler.behaviour}, creepSetup => {                    
+            Task.spawn('Low', mod.name, spawnRoom.name, flag.name, Task.mining.creep.hauler, {type: Task.mining.creep.hauler.behaviour}, creepSetup => {
                 let memory = Task.mining.memory(creepSetup.destiny.room);
                 memory.queued[creepSetup.behaviour].push({
                     room: creepSetup.queueRoom,
@@ -115,7 +130,7 @@ mod.checkForRequiredCreeps = (flag) => {
     }
     if( room && room.constructionSites.length > 0 && workerCount < REMOTE_WORKER_MULTIPLIER) {
         for(let i = workerCount; i < REMOTE_WORKER_MULTIPLIER; i++) {
-            Task.spawn('Low', 'mining', flag.pos.roomName, flag.name, Task.mining.creep.worker, {type: Task.mining.creep.worker.behaviour}, creepSetup => {                    
+            Task.spawn('Low', mod.name, spawnRoom.name, flag.name, Task.mining.creep.worker, {type: Task.mining.creep.worker.behaviour}, creepSetup => {
                 let memory = Task.mining.memory(creepSetup.destiny.room);
                 memory.queued[creepSetup.behaviour].push({
                     room: creepSetup.queueRoom,
@@ -126,7 +141,7 @@ mod.checkForRequiredCreeps = (flag) => {
     }
 };
 mod.memory = key => {
-    let memory = Task.memory('mining', key);
+    let memory = Task.memory(mod.name, key);
     if( !memory.hasOwnProperty('queued') ){
         memory.queued = {
             remoteMiner:[], 
