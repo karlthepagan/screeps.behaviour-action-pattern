@@ -438,11 +438,7 @@ mod.extend = function(){
             configurable: true,
             get: function() {
                 if( _.isUndefined(this._hostiles) ){
-                    let notWhitelisted = (creep) => 
-                        !(PLAYER_WHITELIST.some((player) => 
-                            player.toLowerCase() == creep.owner.username.toLowerCase()
-                        ));
-                    this._hostiles = this.find(FIND_HOSTILE_CREEPS, { filter : notWhitelisted });
+                    this._hostiles = this.find(FIND_HOSTILE_CREEPS, { filter : Task.diplomacy.hostileOwner });
                 }
                 return this._hostiles;
             }
@@ -747,11 +743,7 @@ mod.extend = function(){
                     if (this.reserved) {
                         this._ally = true;
                     } else if (this.controller) {
-                        const owner = this.owner;
-                        const reservation = this.reservation;
-                        this._ally = _.some(PLAYER_WHITELIST, function(player) {
-                            return player === owner || player === reservation;
-                        });
+                        this._ally = Task.diplomacy.isAlly(this.owner) || Task.diplomacy.isAlly(this.reservation);
                     } else {
                         this._ally = false;
                     }
@@ -1264,12 +1256,12 @@ mod.findSpawnRoom = function(params){
     if( !params || !params.targetRoom ) return null;
     // filter validRooms
     let isValidRoom = room => (
-        room.my && 
+        room.my &&
         (params.minEnergyCapacity === undefined || params.minEnergyCapacity >= room.energyCapacityAvailable) &&
         (params.minEnergyAvailable === undefined || params.minEnergyAvailable >= room.energyAvailable) &&
-        (room.name != params.targetRoom || allowTargetRoom === true) && 
-        (params.minRCL === undefined || room.controller.level >= params.minRCL) && 
-        (params.callBack === undefined || params.callBack(room)) 
+        (room.name != params.targetRoom || allowTargetRoom === true) &&
+        (params.minRCL === undefined || room.controller.level >= params.minRCL) &&
+        (params.callBack === undefined || params.callBack(room))
     );
     let validRooms = _.filter(Game.rooms, isValidRoom);
     if( validRooms.length == 0 ) return null;
@@ -1277,8 +1269,8 @@ mod.findSpawnRoom = function(params){
     // range + roomLevelsUntil8/rangeRclRatio + spawnQueueDuration/rangeQueueRatio
     let queueTime = queue => _.sum(queue, parts.length*3);
     let roomTime = room => ((queueTime(room.spawnQueueLow)*0.9) + queueTime(room.spawnQueueMedium) + (queueTime(room.spawnQueueHigh)*1.1) ) / room.structures.spawns.length;
-    let evaluation = room => { return routeRange(room.name, targetRoomName) + 
-        ( (8-room.controller.level) / (params.rangeRclRatio||3) ) + 
+    let evaluation = room => { return routeRange(room.name, targetRoomName) +
+        ( (8-room.controller.level) / (params.rangeRclRatio||3) ) +
         ( roomTime(room) / (params.rangeQueueRatio||51) );
     }
     let best = _.min(validRooms, evaluation);
@@ -1305,7 +1297,7 @@ mod.isCenterRoom = function(roomName){
         return x === 5 && y === 5;
     });
 };
-mod.isCenterNineRoom = function(roomName){ 
+mod.isCenterNineRoom = function(roomName){
     return Room.calcCoordinates(roomName, (x,y) => {
         return x > 3 && x < 7 && y > 3 && y < 7;
     });
@@ -1315,12 +1307,12 @@ mod.isControllerRoom = function(roomName){
         return x !== 0 && y !== 0 && (x < 4 || x > 6 || y < 4 || y > 6);
     });
 };
-mod.isSKRoom = function(roomName){ 
+mod.isSKRoom = function(roomName){
     return Room.calcCoordinates(roomName, (x,y) => {
         return (x > 3 || x < 7) && (y > 3 || y < 7) && (x !== 5 || y !== 5);
     });
 };
-mod.isHighwayRoom = function(roomName){ 
+mod.isHighwayRoom = function(roomName){
     return Room.calcCoordinates(roomName, (x,y) => {
         return x === 0 || y === 0;
     });
