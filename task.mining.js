@@ -78,6 +78,8 @@ mod.checkForRequiredCreeps = (flag) => {
     let workerCount = memory.queued.remoteWorker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==roomName;}).length;
     // TODO: calculate creeps by type needed per source / mineral
 
+    if( DEBUG && TRACE ) trace('Task', {flagName:flag.name, room:spawnRoom, sourceCount, haulerCount, minerCount, workerCount, Task:'Flag.found'}, 'checking flag@', flag.pos);
+
     if(minerCount < sourceCount) {
         for(let i = minerCount; i < sourceCount; i++) {
             Task.spawn(
