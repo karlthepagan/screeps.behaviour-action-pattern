@@ -80,7 +80,7 @@ mod.run = function(creep) {
         else if( SAY_ASSIGNMENT ) creep.say(String.fromCharCode(9962), SAY_PUBLIC);
     }
     if( creep.data.determinatedSpot ) {
-        if(CHATTY) creep.say('upgrading', SAY_PUBLIC);
+        Creep.action.upgrading.chat();
         let range = this.approach(creep);
         if( range == 0 ){
             let carryThreshold = this.chargedEnergy(creep);
@@ -89,7 +89,13 @@ mod.run = function(creep) {
                 if( !store ) store = creep.room.structures.container.controller.find(l => l.store.energy > 0);
                 if( store ) creep.withdraw(store, RESOURCE_ENERGY);
             }
+        }
+        range = creep.pos.getRangeTo(creep.room.controller);
+        if( range <= 3 ){
             creep.upgradeController(creep.room.controller);
+        }
+        if( range === 1) {
+            creep.controllerSign();
         }
     }
 };

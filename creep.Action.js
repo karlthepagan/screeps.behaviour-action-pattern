@@ -51,7 +51,8 @@ let Action = function(actionName){
     };
     this.chat = function(creep){
         if(CHATTY) {
-            if( Game.time % 2 && creep.target && creep.target.pos ) {
+            if( Game.time % 2 && creep.target && creep.target !== creep && creep.target.pos
+                && creep.pos.getRangeTo(creep.target) > 1) {
                 creep.say(this.formatPos(creep.target.pos), SAY_PUBLIC);
             } else {
                 creep.say(this.name, SAY_PUBLIC);

@@ -98,7 +98,7 @@ action.newTarget = function(creep){
     return null;
 };
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name);
+    this.chat(creep);
     if( (creep.target instanceof Flag) && (creep.target.pos.roomName == creep.pos.roomName))
         this.assign(creep);
     this.run[creep.data.creepType](creep);

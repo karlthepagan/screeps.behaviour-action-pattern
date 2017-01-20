@@ -29,7 +29,7 @@ action.newTarget = function(creep){
 };
 
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+    this.chat(creep);
     if( creep.target.color ){
         if( creep.flag.pos.roomName == creep.pos.roomName )
             creep.data.targetId = null;

@@ -8,10 +8,14 @@ action.formatPos = pos => pos.roomName;
 action.step = function(creep){
     this.chat(creep);
     if( creep.target ){
+        let reachedRange = this.reachedRange;
         let pos;
-        if( creep.target.id == creep.id ) pos = new RoomPosition(25, 25, creep.data.travelRoom);
+        if( creep.target.id == creep.id ) {
+            pos = new RoomPosition(25, 25, creep.data.travelRoom);
+            reachedRange = 23;
+        }
         else pos = creep.target.pos;
-        creep.drive( pos, this.reachedRange, this.targetRange, Infinity );
+        creep.drive( pos, reachedRange, this.targetRange, Infinity );
     }
     if( !creep.target || creep.target.pos.roomName == creep.pos.roomName ){
         // unregister

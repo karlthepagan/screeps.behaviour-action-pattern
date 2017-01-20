@@ -37,9 +37,8 @@ mod.clearCache = (task, s) => {
     if( cache[task] && cache[task][s] )
         delete cache[task][s];
 };
-mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, destiny, onQueued) => {
-    // get nearest room
-    let room = Room.bestSpawnRoomFor(targetRoomName);
+mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, destiny, onQueued, room) => {
+    if( !room) room = Room.bestSpawnRoomFor(targetRoomName); // get nearest room
     if( Task[taskName].minControllerLevel && room.controller.level < Task[taskName].minControllerLevel ) return;
     // define new creep
     if(!destiny) destiny = {};
@@ -48,7 +47,7 @@ mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, d
     destiny.targetName = targetName;
     let name = `${creepDefinition.name || creepDefinition.behaviour}-${targetName}`;
     let creepSetup = {
-        parts: Creep.compileBody(room, creepDefinition.fixedBody, creepDefinition.multiBody, true),
+        parts: Creep.compileBody(room, creepDefinition.fixedBody, creepDefinition.multiBody, true, creepDefinition.maxMulti),
         name: name,
         behaviour: creepDefinition.behaviour,
         destiny: destiny,
@@ -64,5 +63,6 @@ mod.spawn = (queueName, taskName, targetRoomName, targetName, creepDefinition, d
     queue.push(creepSetup);
     // save queued creep to task memory
     if( onQueued ) onQueued(creepSetup);
+    if( DEBUG && TRACE ) trace('Task', {task:taskName, room:room.name, 'destiny.room': targetRoomName, Task:'spawn'}, 'queued');
 };
 const cache = {};

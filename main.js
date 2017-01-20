@@ -221,7 +221,7 @@ module.exports.loop = function () {
         };
     }
     if (Memory.debugTrace === undefined) {
-        Memory.debugTrace = {};
+        Memory.debugTrace = {no: {}};
     }
 
     // ensure up to date parameters

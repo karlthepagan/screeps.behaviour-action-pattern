@@ -23,7 +23,7 @@ action.work = function(creep){
     return creep.upgradeController(creep.room.controller);
 };
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+    this.chat(creep);
     let range = creep.pos.getRangeTo(creep.target);
     if( range <= this.targetRange ) {
         var workResult = this.work(creep);

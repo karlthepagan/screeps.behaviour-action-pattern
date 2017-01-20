@@ -1256,31 +1256,60 @@ mod.bestSpawnRoomFor = function(targetRoomName, scoreCallback) {
     }
     return _.chain(Game.rooms).min(range).value();
 };
+mod.findSpawnRoomValidator = function(params){
+    return function (room) {
+        if( DEBUG && TRACE ) trace('Room', {room:room.name, params, Room:'findSpawnRoomValidator'});
+        const my = room.my;
+        if(! my) {
+            if( DEBUG && TRACE ) trace('Room', {room:room.name, my, Room:'findSpawnRoomValidator'}, 'not my room');
+            return false;
+        }
+        const capacity = room.energyCapacityAvailable;
+        if(! (params.minEnergyCapacity === undefined || capacity >= params.minEnergyCapacity)) {
+            if( DEBUG && TRACE ) trace('Room', {room:room.name, capacity, Room:'findSpawnRoomValidator'}, 'needs capacity');
+            return false;
+        }
+        const absEnergy = room.energyAvailable;
+        if(! (params.minEnergyAvailable === undefined || absEnergy >= params.minEnergyAvailable)) {
+            if( DEBUG && TRACE ) trace('Room', {room:room.name, absEnergy, Room:'findSpawnRoomValidator'}, 'needs energy');
+            return false;
+        }
+        if(! (room.name != params.targetRoom || allowTargetRoom === true)) {
+            if( DEBUG && TRACE ) trace('Room', {room:room.name, targetRoom: targetRoom, Room:'findSpawnRoomValidator'}, 'same room not allowed');
+            return false;
+        }
+        const rcl = room.controller.level;
+        if(! (params.minRCL === undefined || rcl >= params.minRCL)) {
+            if( DEBUG && TRACE ) trace('Room', {room:room.name, rcl, Room:'findSpawnRoomValidator'}, 'low RCL');
+            return false;
+        }
+        if(! (params.callBack === undefined || params.callBack(room))) {
+            if( DEBUG && TRACE ) trace('Room', {room:room.name, Room:'findSpawnRoomValidator'}, 'rejected by callBack');
+            return false;
+        }
+        return true;
+    };
+};
 // find a room to spawn
 // params: { targetRoom, minRCL = 0, maxRange = Infinity, minEnergyAvailable = 0, minEnergyCapacity = 0, callBack = null, allowTargetRoom = false, rangeRclRatio = 3, rangeQueueRatio = 51 }
 // requiredParams: targetRoom
 mod.findSpawnRoom = function(params){
     if( !params || !params.targetRoom ) return null;
     // filter validRooms
-    let isValidRoom = room => (
-        room.my &&
-        (params.minEnergyCapacity === undefined || params.minEnergyCapacity >= room.energyCapacityAvailable) &&
-        (params.minEnergyAvailable === undefined || params.minEnergyAvailable >= room.energyAvailable) &&
-        (room.name != params.targetRoom || allowTargetRoom === true) &&
-        (params.minRCL === undefined || room.controller.level >= params.minRCL) &&
-        (params.callBack === undefined || params.callBack(room))
-    );
+    let isValidRoom = mod.findSpawnRoomValidator(params);
     let validRooms = _.filter(Game.rooms, isValidRoom);
+    if( DEBUG && TRACE ) trace('Room', {room:params.targetRoom, validRooms:validRooms.length, params, Room:'findSpawnRoom'});
     if( validRooms.length == 0 ) return null;
     // select "best"
     // range + roomLevelsUntil8/rangeRclRatio + spawnQueueDuration/rangeQueueRatio
-    let queueTime = queue => _.sum(queue, parts.length*3);
+    let queueTime = queue => _.sum(queue, i=>i.parts.length*3);
     let roomTime = room => ((queueTime(room.spawnQueueLow)*0.9) + queueTime(room.spawnQueueMedium) + (queueTime(room.spawnQueueHigh)*1.1) ) / room.structures.spawns.length;
-    let evaluation = room => { return routeRange(room.name, targetRoomName) +
+    let evaluation = room => { return routeRange(room.name, params.targetRoom) +
         ( (8-room.controller.level) / (params.rangeRclRatio||3) ) +
         ( roomTime(room) / (params.rangeQueueRatio||51) );
     }
     let best = _.min(validRooms, evaluation);
+    return best;
 };
 mod.getCostMatrix = function(roomName) {
     var room = Game.rooms[roomName];

@@ -8,7 +8,7 @@ action.newTarget = function(creep){
     return creep;
 };
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+    this.chat(creep);
     creep.idleMove();
     delete creep.data.actionName;
     delete creep.data.targetId;

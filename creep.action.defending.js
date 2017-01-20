@@ -20,7 +20,7 @@ action.newTarget = function(creep){
     return closestHostile;
 };
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+    this.chat(creep);
     this.run[creep.data.creepType](creep);
 };
 action.run = {

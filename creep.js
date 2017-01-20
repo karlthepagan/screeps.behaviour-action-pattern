@@ -394,9 +394,9 @@ mod.partsComparator = function (a, b) {
     let indexOfB = partsOrder.indexOf(b);
     return indexOfA - indexOfB;
 };
-mod.compileBody = function (room, fixedBody, multiBody, sort = false) {
+mod.compileBody = function (room, fixedBody, multiBody, sort = false, maxMulti) {
     let parts = [];
-    let multi = Creep.multi(room, fixedBody, multiBody);
+    let multi = Math.min(Creep.multi(room, fixedBody, multiBody), maxMulti);
     for (let iMulti = 0; iMulti < multi; iMulti++) {
         parts = parts.concat(multiBody);
     }

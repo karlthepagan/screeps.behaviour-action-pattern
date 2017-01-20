@@ -56,20 +56,15 @@ mod.handleSpawningStarted = params => {
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
-    let spawnRoom = Room.findSpawnRoom({
+    const spawnRoomParams = {
         targetRoom: flag.pos.roomName,
         minRCL: mod.minControllerLevel,
-        maxRange: Infinity,
-        minEnergyAvailable: 0,
-        minEnergyCapacity: 0,
-        callBack: null,
         allowTargetRoom: true,
-        rangeRclRatio: 0.5,
-        rangeQueueRatio: 51});
-    if (!spawnRoom) {
-        if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, Task:'Flag.found'}, 'no spawn room');
-        return;
-    }
+        minEnergyCapacity: 550,
+        rangeRclRatio: 2,
+        rangeQueueRatio: 51,
+        callBack: room => room.controller.level < 4 || room.energyAvailable > 1000
+    };
 
     const roomName = flag.pos.roomName;
     const room = Game.rooms[roomName];
@@ -93,14 +88,20 @@ mod.checkForRequiredCreeps = (flag) => {
     let workerCount = memory.queued.remoteWorker.length + _.filter(Game.creeps, function(c){return c.data && c.data.creepType=='remoteWorker' && c.data.destiny.room==roomName;}).length;
     // TODO: calculate creeps by type needed per source / mineral
 
-    if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, room:spawnRoom.name, sourceCount, haulerCount, minerCount, workerCount, Task:'Flag.found'}, 'checking flag@', flag.pos);
+    if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, room:flag.pos.roomName, sourceCount, haulerCount, minerCount, workerCount, Task:'Flag.found'}, 'checking flag@', flag.pos);
 
     if(minerCount < sourceCount) {
         for(let i = minerCount; i < sourceCount; i++) {
+            let spawnRoom = Room.findSpawnRoom(spawnRoomParams);
+            if (!spawnRoom) {
+                if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, room:flag.pos.roomName, Task:'Flag.found'}, 'no spawn room for miner');
+                return;
+            }
+
             Task.spawn(
                 'Low', // queue
                 mod.name, // taskName
-                spawnRoom.name, // targetRoom
+                flag.pos.roomName, // targetRoom
                 flag.name, // targetName
                 Task.mining.creep.miner, // creepDefinition
                 { type: Task.mining.creep.miner.behaviour }, // custom destiny attributes
@@ -110,7 +111,8 @@ mod.checkForRequiredCreeps = (flag) => {
                         room: creepSetup.queueRoom,
                         name: creepSetup.name
                     });
-                }
+                },
+                spawnRoom // room
             );
         }
     }
@@ -119,23 +121,35 @@ mod.checkForRequiredCreeps = (flag) => {
     let maxHaulers = Math.ceil(runningMiners.length * REMOTE_HAULER_MULTIPLIER);
     if(haulerCount < maxHaulers) {
         for(let i = haulerCount; i < maxHaulers; i++) {
-            Task.spawn('Low', mod.name, spawnRoom.name, flag.name, Task.mining.creep.hauler, {type: Task.mining.creep.hauler.behaviour}, creepSetup => {
+            let spawnRoom = Room.findSpawnRoom(spawnRoomParams);
+            if (!spawnRoom) {
+                if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, room:flag.pos.roomName, Task:'Flag.found'}, 'no spawn room for hauler');
+                return;
+            }
+
+            Task.spawn('Low', mod.name, flag.pos.roomName, flag.name, Task.mining.creep.hauler, {type: Task.mining.creep.hauler.behaviour}, creepSetup => {
                 let memory = Task.mining.memory(creepSetup.destiny.room);
                 memory.queued[creepSetup.behaviour].push({
                     room: creepSetup.queueRoom,
                     name: creepSetup.name
-                });
+                }, spawnRoom);
             });
         }
     }
     if( room && room.constructionSites.length > 0 && workerCount < REMOTE_WORKER_MULTIPLIER) {
         for(let i = workerCount; i < REMOTE_WORKER_MULTIPLIER; i++) {
-            Task.spawn('Low', mod.name, spawnRoom.name, flag.name, Task.mining.creep.worker, {type: Task.mining.creep.worker.behaviour}, creepSetup => {
+            let spawnRoom = Room.findSpawnRoom(spawnRoomParams);
+            if (!spawnRoom) {
+                if( DEBUG && TRACE ) trace('Task', {task:mod.name, flagName:flag.name, room:flag.pos.roomName, Task:'Flag.found'}, 'no spawn room for worker');
+                return;
+            }
+
+            Task.spawn('Low', mod.name, flag.pos.roomName, flag.name, Task.mining.creep.worker, {type: Task.mining.creep.worker.behaviour}, creepSetup => {
                 let memory = Task.mining.memory(creepSetup.destiny.room);
                 memory.queued[creepSetup.behaviour].push({
                     room: creepSetup.queueRoom,
                     name: creepSetup.name
-                });
+                }, spawnRoom);
             });
         }
     }
@@ -168,8 +182,9 @@ mod.memory = key => {
 };
 mod.creep = {
     miner: {
-        fixedBody: [MOVE, MOVE, MOVE, WORK, WORK, WORK, WORK, WORK, CARRY],
-        multiBody: [],
+        fixedBody: [MOVE, MOVE, WORK, WORK, WORK, WORK, CARRY],
+        multiBody: [MOVE, WORK, WORK],
+        maxMulti: 1,
         behaviour: 'remoteMiner'
     },
     hauler: {

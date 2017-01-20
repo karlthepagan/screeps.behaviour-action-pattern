@@ -17,9 +17,14 @@ mod.run = function(creep) {
     }
 };
 mod.nextAction = function(creep){
-    if( creep.pos.roomName != creep.data.homeRoom && Game.rooms[creep.data.homeRoom] && Game.rooms[creep.data.homeRoom].controller ) {
-        if( DEBUG && TRACE ) trace('Behaviour', {actionName:'travelling', behaviourName:this.name, creepName:creep.name, assigned: true, Behaviour:'nextAction', Action:'assign'});
-        Creep.action.travelling.assign(creep, Game.rooms[creep.data.homeRoom].controller);
+    if( creep.data.homeRoom && creep.pos.roomName != creep.data.homeRoom ) {
+        if( DEBUG && TRACE ) trace('Behaviour', {actionName:'travelling', room: creep.data.homeRoom, behaviourName:this.name, creepName:creep.name, assigned: true, Behaviour:'nextAction', Action:'assign'});
+        if( Game.rooms[creep.data.homeRoom] && Game.rooms[creep.data.homeRoom].controller ) {
+            Creep.action.travelling.assign(creep, Game.rooms[creep.data.homeRoom].controller);
+        } else {
+            creep.data.travelRoom = creep.data.homeRoom;
+            Creep.action.travelling.assign(creep, creep);
+        }
         return true;
     }
     let priority;

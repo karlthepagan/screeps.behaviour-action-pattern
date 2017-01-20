@@ -9,7 +9,7 @@ mod.approach = function(creep){
     return range;
 };
 mod.run = function(creep) {
-    if( creep.pos.roomName != creep.data.homeRoom && Game.rooms[creep.data.homeRoom] && Game.rooms[creep.data.homeRoom].controller ) {
+    if( creep.pos.roomName != creep.data.homeRoom ) {
         Creep.behaviour.worker.run(creep);
         return;
     }
