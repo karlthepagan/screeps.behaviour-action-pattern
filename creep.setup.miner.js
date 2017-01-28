@@ -9,9 +9,17 @@ setup.default = {
     maxMulti: 1,
     maxCount: room => room.sources.length
 };
+setup.low = {
+    fixedBody: [WORK, WORK, MOVE],
+    multiBody: [WORK, WORK, WORK],
+    minAbsEnergyAvailable: 250,
+    minEnergyAvailable: 0.9,
+    maxMulti: 1,
+    maxCount: room => room.sources.length,
+};
 setup.RCL = {
-    1: setup.none,
-    2: setup.none,
+    1: setup.low,
+    2: setup.low,
     3: setup.default,
     4: setup.default,
     5: setup.default,

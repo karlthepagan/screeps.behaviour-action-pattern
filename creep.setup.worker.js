@@ -19,12 +19,23 @@ setup.maxWorker = room => {
 setup.hasMinerOrHauler = room => ( room.population &&
     ((room.population.typeCount['hauler'] && room.population.typeCount['hauler'] > 0) ||
     (room.population.typeCount['miner'] && room.population.typeCount['miner'] > 0 )));
+setup.byPopulation = function(type, top, perBody, limit) {
+    return function(room) {
+        const result = top + (room.population && (room.population.typeCount[setup.type] * perBody) || 0);
+        if( !limit || top >= result >= limit || top <= result <= limit ) {
+            return result;
+        } else {
+            return limit;
+        }
+    };
+};
+
 setup.RCL = {
     1: {
         fixedBody: [],
         multiBody: [CARRY, WORK, MOVE],
         minAbsEnergyAvailable: 200,
-        minEnergyAvailable: 0,
+        minEnergyAvailable: setup.byPopulation(setup.type, 0, 1, 1),
         maxMulti: 8,
         maxCount: room => ( room.situation.invasion ) ? 1 : 4,
         maxWeight: 4000
@@ -33,7 +44,7 @@ setup.RCL = {
         fixedBody: [],
         multiBody: [CARRY, WORK, MOVE],
         minAbsEnergyAvailable: 200,
-        minEnergyAvailable: 0,
+        minEnergyAvailable: setup.byPopulation(setup.type, 0, 0.5, 1),
         maxMulti: 8,
         maxCount: room => ( room.situation.invasion ) ? 1 : 6,
         maxWeight: 14400
