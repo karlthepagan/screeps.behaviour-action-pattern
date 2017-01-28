@@ -28,9 +28,9 @@ mod.extend = function(){
             }
         }
     };
-    
-    // Check if a creep has body parts of a certain type anf if it is still active. 
-    // Accepts a single part type (like RANGED_ATTACK) or an array of part types. 
+
+    // Check if a creep has body parts of a certain type anf if it is still active.
+    // Accepts a single part type (like RANGED_ATTACK) or an array of part types.
     // Returns true, if there is at least any one part with a matching type present and active.
     Creep.prototype.hasActiveBodyparts = function(partTypes){
         if(Array.isArray(partTypes))
@@ -294,7 +294,7 @@ mod.extend = function(){
             if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, 'no WORK');
         }
     };
-    
+
     Creep.prototype.controllerSign = function() {
         if(CONTROLLER_SIGN && (!this.room.controller.sign || this.room.controller.sign.username != this.owner.username)) {
             this.signController(this.room.controller, CONTROLLER_SIGN_MESSAGE);
@@ -331,7 +331,7 @@ mod.extend = function(){
                 }
                 return this._sum;
             }
-        }, 
+        },
         'threat': {
             configurable: true,
             get: function() {
@@ -396,6 +396,11 @@ mod.execute = function(){
     let run = creep => creep.run();
     _.forEach(Game.creeps, run);
 };
+mod.setupQueue = _.memoize(function(priority, rcl) {
+    return _.chain(Creep.setup).values()
+        .map(s => ({s, v: s.RCL[rcl][priority]}))
+        .filter("v").sortBy("v").reverse().map("s").value();
+});
 mod.bodyCosts = function(body){
     let costs = 0;
     if( body ){
@@ -444,7 +449,7 @@ mod.compileBody = function (room, params, sort = true) {
     for (let iPart = 0; iPart < params.fixedBody.length; iPart++) {
         parts[parts.length] = params.fixedBody[iPart];
     }
-    if( sort ) parts.sort(Creep.partsComparator);            
+    if( sort ) parts.sort(Creep.partsComparator);
     if( parts.includes(HEAL) ) {
         let index = parts.indexOf(HEAL);
         parts.splice(index, 1);
