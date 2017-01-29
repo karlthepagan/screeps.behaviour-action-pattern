@@ -24,7 +24,6 @@ setup.byPopulation = function(type, start, perBody, limit) {
     return function(room) {
         const result = start + (room.population && (room.population.typeCount[type] * perBody) || 0);
         if( !limit || result <= limit ) {
-            console.log(result);
             return result;
         } else {
             return limit;
