@@ -19,17 +19,18 @@ setup.maxWorker = room => {
 setup.hasMinerOrHauler = room => ( room.population &&
     ((room.population.typeCount['hauler'] && room.population.typeCount['hauler'] > 0) ||
     (room.population.typeCount['miner'] && room.population.typeCount['miner'] > 0 )));
-setup.byPopulation = function(type, top, perBody, limit) {
+// this assures that the first worker gets spawned immediately, but later workers require more energy, giving preference to miners
+setup.byPopulation = function(type, start, perBody, limit) {
     return function(room) {
-        const result = top + (room.population && (room.population.typeCount[setup.type] * perBody) || 0);
-        if( !limit || top >= result >= limit || top <= result <= limit ) {
+        const result = start + (room.population && (room.population.typeCount[type] * perBody) || 0);
+        if( !limit || result <= limit ) {
+            console.log(result);
             return result;
         } else {
             return limit;
         }
     };
 };
-
 setup.RCL = {
     1: {
         fixedBody: [],
