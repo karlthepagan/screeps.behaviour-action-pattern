@@ -2,6 +2,43 @@ let mod = {};
 module.exports = mod;
 mod.minControllerLevel = 4;
 mod.name = 'mining';
+mod.carry = function(roomName, partChange) {
+    let memory = Task.mining.memory(roomName);
+    memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
+    return `Task.${mod.name} set hauler carry parts for ${roomName} to ${memory.carryParts}`;
+};
+mod.storage = function(roomName, direction, storageRoom) {
+    const room = Game.rooms[roomName];
+    let memory = Task.mining.memory(roomName);
+    if (storageRoom) {
+        const sources = memory.storageRoom ||
+                room && _.chain(room.sources).indexBy('id').map(i=>_(i.pos).omit('roomName')).value();
+        if (!sources) {
+            return `Task.${mod.name} sources in ${roomName} not discovered`;
+        }
+
+        memory.storageRoom = sources;
+
+        const corner = new RoomPosition(25, 25, roomName).getPositionFrom(direction, 24)
+        const target = _.min(sources, i => corner.getRangeTo(i));
+
+        if (!target) {
+            return `cannot get min range source, room:${roomName} dir:${direction}`;
+        }
+
+        sources[target.id].storage = storageRoom.name;
+
+        return `Task.${mod.name} set ${roomName} source ${target.id} storage destination for haulers to ${storageRoom.name}`;
+    } else if (!memory.storageRoom) {
+        return `Task.${mod.name} mining ${roomName} custom storage rooms not set`;
+    } else if (storageRoom === false) {
+        const was = memory.storageRoom;
+        delete memory.storageRoom;
+        return `Task.${mod.name} cleared ${roomName} custom storage room, was ${was}`;
+    } else {
+        return `Task.${mod.name} mining ${roomName} sending haulers to ${memory.storageRoom}`
+    }
+};
 mod.register = () => {
     // when a new flag has been found (occurs every tick, for each flag)
     Flag.found.on( flag => Task.mining.handleFlagFound(flag) );
@@ -233,11 +270,6 @@ mod.creep = {
         queue: 'Low'
     }
 };
-mod.carry = function(roomName, partChange) {
-    let memory = Task.mining.memory(roomName);
-    memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
-    return `Task.${mod.name} set hauler carry parts for ${roomName} to ${memory.carryParts}`;
-};
 function haulerWeightToCarry(weight) {
     if( !weight || weight < 0) return 0;
     const multiWeight = _.max([0, weight - 500]);
@@ -248,6 +280,18 @@ function haulerCarryToWeight(carry) {
     const multiCarry = _.max([0, carry - 5]);
     return 500 + 150 * _.ceil(multiCarry * 0.5);
 }
+mod.setDeliveryRoom = function(creep) {
+    const target = creep.target;
+    const storage = Task.mining.memory(creep.room.name).storageRoom;
+    if (!(storage && target)) return;
+
+    const sources = target.pos.lookForAtArea(LOOK_SOURCES, target.pos.y - 1, target.pos.x - 1,
+        target.pos.y + 1, target.pos.x + 1, true);
+
+    if( !(sources && sources.length)) return;
+
+    creep.data.homeRoom = storage[sources[0].id].storage || creep.data.homeRoom;
+};
 mod.strategies = {
     defaultStrategy: {
         name: `default-${mod.name}`,

@@ -52,8 +52,9 @@ mod.mine = function(creep) {
 
             let invalid = [];
             let findInvalid = entry => {
-                if( entry.roomName == args.roomName && ['miner', 'upgrader'].includes(entry.creepType) && entry.determinatedSpot && entry.ttl > entry.spawningTime)
-                    invalid.push(entry.determinatedSpot)
+                if( entry.roomName == args.roomName && ['miner', 'upgrader'].includes(entry.creepType) &&
+                    entry.determinatedSpot && (entry.ttl > entry.spawningTime || entry.ttl > entry.predictedRenewal) )
+                    invalid.push(entry.determinatedSpot);
             };
             _.forEach(Memory.population, findInvalid);
             args.where = pos => { return !_.some(invalid,{x:pos.x,y:pos.y}); };
@@ -82,16 +83,22 @@ mod.mine = function(creep) {
 
         if( creep.data.determinatedSpot ) {
             let carrying = creep.sum;
-            if( source.link && source.link.energy < source.link.energyCapacity ) {
-                if(CHATTY) creep.say('harvesting', SAY_PUBLIC);
+            const linkEnergy = source.link && source.link.energy;
+            const containerEnergy = source.container && source.container.sum;
+            const haulerCount = creep.room.population && creep.room.population.typeCount['hauler'] && creep.room.population.typeCount['hauler'];
+            let branch;
+            if( source.link && linkEnergy < source.link.energyCapacity ) {
+                branch = 'link mine';
+                if(CHATTY) creep.say(branch, SAY_PUBLIC);
                 let range = this.approach(creep);
                 if( range == 0 ){
                     if(carrying > ( creep.carryCapacity - ( creep.data.body&&creep.data.body.work ? (creep.data.body.work*2) : (creep.carryCapacity/2) )))
                         creep.transfer(source.link, RESOURCE_ENERGY);
                     creep.harvest(source);
                 }
-            } else if( source.container && source.container.sum < source.container.storeCapacity ) {
-                if(CHATTY) creep.say('harvesting', SAY_PUBLIC);
+            } else if( source.container && containerEnergy < source.container.storeCapacity ) {
+                branch = 'can mine';
+                if(CHATTY) creep.say(branch, SAY_PUBLIC);
                 let range = this.approach(creep);
                 if( range == 0 ){
                     if( carrying > ( creep.carryCapacity - ( creep.data.body&&creep.data.body.work ? (creep.data.body.work*2) : (creep.carryCapacity/2) ))){
@@ -100,8 +107,9 @@ mod.mine = function(creep) {
                     }
                     creep.harvest(source);
                 }
-            } else if( creep.room.population && creep.room.population.typeCount['hauler'] && creep.room.population.typeCount['hauler'] > 0 ) {
-                if(CHATTY) creep.say('dropmining', SAY_PUBLIC);
+            } else if( haulerCount > 0 ) {
+                branch = 'drop mine';
+                if(CHATTY) creep.say(branch, SAY_PUBLIC);
                 let range = this.approach(creep);
                 if( range == 0 ){
                     if( carrying > ( creep.carryCapacity -
@@ -113,8 +121,11 @@ mod.mine = function(creep) {
                     creep.harvest(source);
                 }
             } else {
+                branch = 'behaviour.worker.run';
                 Creep.behaviour.worker.run(creep);
             }
+            if( DEBUG && TRACE ) trace('Behaviour', {creepName:creep.name, mine: branch, linkEnergy, containerEnergy,
+                haulerCount,  Behaviour:mod.name, [mod.name]:'mine'});
         }
     }
 };
@@ -124,7 +135,9 @@ mod.approach = function(creep){
     if( range > 0 ) {
         creep.drive( targetPos, 0, 0, range );
         if( range === 1 && !creep.data.predictedRenewal ) {
-            creep.data.predictedRenewal = _.min([500, 1500 - creep.ticksToLive + creep.data.spawningTime]);
+            const predictedRenewal = _.min([500, 1500 - creep.ticksToLive + creep.data.spawningTime]);
+            if( DEBUG && TRACE ) trace('Behaviour', {creepName:creep.name, predictedRenewal, Behaviour:mod.name, [mod.name]:'approach'});
+            creep.data.predictedRenewal = predictedRenewal;
         }
     }
     return range;

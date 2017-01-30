@@ -5,23 +5,33 @@ setup.maxMulti = function(room) {
     let max = 7;
     if( room.minerals.length > 0 )
         max += 2;
-    let contSum = _.sum(room.structures.container.in, 'sum');
+    let contSum = room.structures.container.in.length * 2000;
     contSum += _.sum(room.droppedResources, 'amount');
     max += Math.floor(contSum / 1000);
     max += Creep.setup.upgrader.maxMulti(room);
-    return Math.min(max, 16);
+    return Math.min(max, 15);
 };
-setup.maxCount = function(room){
+setup.minMulti = function(room) {
+    if( !room.population || !room.population.typeCount.hauler) return 0;
+    return 2 * (room.controller.level - 1);
+};
+const maxCount = function(room){
     if( !room.population ) return 0;
     let count = 0;
     let miners = (room.population.typeCount['miner']||0);
     let workers = (room.population.typeCount['worker']||0);
-    let cont = room.structures.container.in.length + room.structures.links.storage.length;
-    if( miners > 0  || ( cont > 0 && workers > 2 )) {
-        count += Creep.setup.upgrader.maxCount(room);
-        if( room.structures.links.all.length < 3 ||
+    let containers = room.structures.container.in.length + room.structures.links.storage.length;
+    let maxUpgraders;
+    let linkTransport;
+    if( miners > 0  || ( containers > 0 && workers > 2 )) {
+        maxUpgraders = Creep.setup.upgrader.maxCount(room);
+        count += maxUpgraders;
+        linkTransport = !(room.structures.links.all.length < 3 ||
            (room.storage && room.storage.store.energy > MAX_STORAGE_ENERGY[room.controller.level] &&
-            room.structures.container.controller && _.sum(room.structures.container.controller, 'store.energy') == 0 )) count++;
+            room.structures.container.controller && _.sum(room.structures.container.controller, 'store.energy') == 0 ));
+
+        if( !linkTransport) count++;
+
         /* Add hauler when there is energy on the ground
         let dropped = 0;
         let isSource = pos => room.sources.some(s => s.pos.x === pos.x && s.pos.y === pos.y);
@@ -35,10 +45,15 @@ setup.maxCount = function(room){
         */
         if( count == 0 ) count = 1;
     }
+
+    if( DEBUG && TRACE ) trace('Setup', {Setup:setup.type, room: room.name, miners, workers, containers, maxUpgraders,
+        linkTransport, maxCount: count, [setup.type]:'maxCount'});
+
     return count;
 };
 setup.maxWeight = function(room){
-    return setup.maxCount(room) * 2000;
+    const memory = Task.mining.memory(room.name);
+    return maxCount(room) * 2000 + (memory.carryParts || 0) * 75;
 };
 setup.default = {
     fixedBody: [WORK, CARRY, MOVE],
@@ -46,7 +61,8 @@ setup.default = {
     minAbsEnergyAvailable: 200,
     minEnergyAvailable: 0.4,
     maxMulti: setup.maxMulti,
-    maxCount: setup.maxCount,
+    minMulti: setup.minMulti,
+    maxCount: 10,
     maxWeight: setup.maxWeight,
     highPriority: 90,
 };

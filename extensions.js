@@ -50,6 +50,10 @@ mod.extend = function(){
             return this._adjacent;
         }
     });
+    RoomPosition.prototype.getPositionFrom = function(direction, range) {
+        const result = new RoomPosition(this.x, this.y, this.roomName);
+        return dirTransform(result, direction, range);
+    };
     Object.defineProperty(RoomObject.prototype, 'accessibleFields', {
         configurable: true,
         get: function() {
@@ -201,6 +205,40 @@ mod.extend = function(){
     if( Memory.pavementArt === undefined ) Memory.pavementArt = {};
 };
 module.exports = mod;
+
+function dirTransform(origin, direction, range) {
+    if (!range) range = 1;
+    // fallthrough magic
+    switch (direction) {
+        case TOP_RIGHT:
+            origin.x = origin.x + range;
+        case TOP:
+            origin.y = origin.y - range;
+            break;
+
+        case BOTTOM_RIGHT:
+            origin.y = origin.y + range;
+        case RIGHT:
+            origin.x = origin.x + range;
+            break;
+
+        case BOTTOM_LEFT:
+            origin.x = origin.x - range;
+        case BOTTOM:
+            origin.y = origin.y + range;
+            break;
+
+        case TOP_LEFT:
+            origin.y = origin.y - range;
+        case LEFT:
+            origin.x = origin.x - range;
+            break;
+
+        default:
+    }
+
+    return origin;
+}
 
         /*
         Object.defineProperty(Structure.prototype, 'memory', {

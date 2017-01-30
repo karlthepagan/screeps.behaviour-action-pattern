@@ -7,7 +7,7 @@ mod.run = function(creep) {
     if( creep.action == null || creep.action.name == 'idle' ) {
         this.nextAction(creep);
     }
-    
+
     // Do some work
     if( creep.action && creep.target ) {
         creep.action.step(creep);
@@ -48,11 +48,14 @@ mod.nextAction = function(creep){
     }
     // at target room
     else if( creep.data.destiny.room == creep.pos.roomName ){
-        // if it's not full
-        if( creep.sum < (creep.carryCapacity*0.8) ) {
-            // get some energy
-            if( this.assign(creep, Creep.action.picking) ) return;
-            if( this.assign(creep, Creep.action.uncharging) ) return;
+        // get some energy
+        if( this.assign(creep, Creep.action.uncharging) ) {
+            Task.mining.setDeliveryRoom(creep);
+            return;
+        }
+        if( this.assign(creep, Creep.action.picking) ) {
+            Task.mining.setDeliveryRoom(creep);
+            return;
         }
         // carrier full or everything picked
         this.goHome(creep);
