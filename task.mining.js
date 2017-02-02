@@ -1,6 +1,6 @@
 let mod = {};
 module.exports = mod;
-mod.minControllerLevel = 4;
+mod.minControllerLevel = 2;
 mod.name = 'mining';
 mod.register = () => {
     // when a new flag has been found (occurs every tick, for each flag)
@@ -82,7 +82,7 @@ mod.checkForRequiredCreeps = (flag) => {
 
     // TODO: don't iterate/filter all creeps (3 times) each tick. store numbers into memory (see guard tasks)
     const creepsByType = _.chain(Game.creeps)
-        .filter(function(c) {return c.data.destiny && c.data.destiny.room===roomName;})
+        .filter(function(c) {return c.data && c.data.destiny && c.data.destiny.room===roomName;})
         .groupBy('data.creepType').value();
     let existingHaulers = creepsByType.remoteHauler || [];
     let haulerCount = memory.queued.remoteHauler.length + existingHaulers.length;
@@ -108,7 +108,8 @@ mod.checkForRequiredCreeps = (flag) => {
                 }, 
                 { // spawn room selection params
                     targetRoom: flag.pos.roomName,
-                    minEnergyCapacity: 800
+                    minEnergyCapacity: 550,
+                    rangeRclRatio: 1,
                 },
                 creepSetup => { // onQueued callback
                     let memory = Task.mining.memory(creepSetup.destiny.room);
@@ -215,10 +216,11 @@ mod.memory = key => {
 };
 mod.creep = {
     miner: {
-        fixedBody: [MOVE, MOVE, MOVE, WORK, WORK, WORK, WORK, WORK, WORK, CARRY],
-        multiBody: [],
+        fixedBody: [MOVE, WORK, WORK, WORK, WORK, WORK],
+        multiBody: [MOVE, MOVE, WORK, CARRY],
+        maxMulti: 1,
         behaviour: 'remoteMiner',
-        queue: 'Low'
+        queue: 'Medium' // not much point in hauling or working without a miner, and they're a cheap spawn.
     },
     hauler: {
         fixedBody: [CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, WORK],
@@ -274,6 +276,7 @@ mod.strategies = {
             if( !existingCreeps ) existingCreeps = [];
             const queuedCreeps = memory.queued.remoteHauler;
             const room = Game.rooms[roomName];
+            // TODO loop per-source, take pinned delivery for route calc
             const travel = routeRange(roomName, travelRoom.name);
             let ept = 10;
             if( room ) {
