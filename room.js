@@ -1290,6 +1290,9 @@ mod.execute = function() {
     let run = (memory, roomName) => {
         let room = Game.rooms[roomName];
         if( room ){ // has sight
+            if( room.situation.invasion || room.hostileIds.length ) {
+                Room.invasion.trigger(roomName, room.hostileIds);
+            }
             room.goneInvader.forEach(triggerGoneInvaders);
             room.hostileIds.forEach(triggerKnownInvaders);
             room.newInvader.forEach(triggerNewInvaders);
@@ -1297,7 +1300,10 @@ mod.execute = function() {
             if( room.collapsed ) Room.collapsed.trigger(room);
         }
         else { // no sight
-            if( memory.hostileIds ) _.forEach(memory.hostileIds, triggerKnownInvaders);
+            if( memory.hostileIds ) {
+                Room.invasion.trigger(roomName, memory.hostileIds);
+                _.forEach(memory.hostileIds, triggerKnownInvaders);
+            }
         }
     };
     _.forEach(Memory.rooms, run);
