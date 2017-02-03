@@ -1,14 +1,19 @@
 // Defense task handles spotted invaders. Spawns defenders and gives them special behaviour.
 let mod = {};
 module.exports = mod;
+mod.name = 'defense';
 // hook into events
 mod.register = () => {
     // When a new invader has been spotted
     Room.newInvader.on( invaderCreep => Task.defense.handleNewInvader(invaderCreep) );
+    // When a room has known invaders
+    Room.invasion.on( Task.defense.handleKnownInvasion );
     // When an invader leaves a room
     Room.goneInvader.on( invaderId => Task.defense.handleGoneInvader(invaderId) );
     // a creep died
     Creep.died.on( creepName => Task.defense.handleCreepDied(creepName) );
+    // a creep starts spawning
+    Creep.spawningStarted.on( params => Task.defense.handleSpawningStarted(params) );
 };
 // When a new invader has been spotted
 mod.handleNewInvader = invaderCreep => {
@@ -36,6 +41,25 @@ mod.handleNewInvader = invaderCreep => {
         invaderCreep.room.hostiles.forEach(Task.defense.orderDefenses);            
     }
 };
+mod.handleKnownInvasion = function(roomName, hostileIds) {
+    if( !hostileIds || !Game.rooms[roomName]) return;
+
+    console.log('derp');
+    // TODO put defender id into task memory
+    for( const invaderId of hostileIds ) {
+        const invader = Game.getObjectById(invaderId);
+        const mem = Task.defense.memory(invaderId);
+        if( invader && mem && mem.defender && mem.defender.name ) {
+            const creep = Game.creeps[mem.defender.name];
+            if( creep.data.destiny.invaderId === invaderId ) {
+                creep.data.destiny.lastPos = invader.pos;
+            } else {
+                // TODO delete invaderId?
+                delete mem.defender.name; // delete name assignment, TODO migrate to handleGone?
+            }
+        }
+    }
+};
 // When an invader leaves a room
 mod.handleGoneInvader = invaderId => {
     // check if invader died or in an other room (requires vision)
@@ -49,7 +73,7 @@ mod.handleGoneInvader = invaderId => {
             let removeQueued = entry => {
                 let roomMemory = Memory.rooms[entry.spawnRoom];
                 if( roomMemory && roomMemory.spawnQueueHigh ){
-                    let thisEntry = queued => queued.destiny && queued.destiny.task === 'defense' && queued.destiny.invaderId === invaderId;
+                    let thisEntry = queued => queued.destiny && queued.destiny.task === mod.name && queued.destiny.invaderId === invaderId;
                     let index = roomMemory.spawnQueueHigh.findIndex(thisEntry);
                     if( index > -1 ) roomMemory.spawnQueueHigh.splice(index, 1);
                 }
@@ -58,7 +82,7 @@ mod.handleGoneInvader = invaderId => {
         }
 
         // cleanup task memory
-        Task.clearMemory('defense', invaderId);
+        Task.clearMemory(mod.name, invaderId);
         // other existing creeps will recycle themself via nextAction (see below)
     }
 };
@@ -66,7 +90,7 @@ mod.handleGoneInvader = invaderId => {
 mod.handleCreepDied = creepName => {     
     // check if its our creep
     let creepMemory = Memory.population[creepName];
-    if (!creepMemory || !creepMemory.destiny || !creepMemory.destiny.task || creepMemory.destiny.task != 'defense' || !creepMemory.destiny.invaderId )
+    if (!creepMemory || !creepMemory.destiny || !creepMemory.destiny.task || creepMemory.destiny.task != mod.name || !creepMemory.destiny.invaderId )
         return;
     // check if the invader is still there
     let invader = Game.getObjectById(creepMemory.destiny.invaderId);
@@ -85,7 +109,7 @@ mod.handleCreepDied = creepName => {
 };
 // get task memory
 mod.memory = invaderId => {
-    return Task.memory('defense', invaderId);
+    return Task.memory(mod.name, invaderId);
 };
 mod.creep = {
     defender: {
@@ -118,10 +142,10 @@ mod.orderDefenses = invaderCreep => {
       
         let queued = Task.spawn(
             Task.defense.creep.defender, { // destiny
-                task: 'defense', 
+                task: mod.name,
                 targetName: invaderId,
                 invaderId: invaderId, 
-                spottedIn: invaderCreep.pos.roomName, 
+                lastPos: invaderCreep.pos,
                 order: orderId
             }, { // spawn room selection params
                 targetRoom: invaderCreep.pos.roomName, 
@@ -133,9 +157,9 @@ mod.orderDefenses = invaderCreep => {
                 let memory = Task.defense.memory(invaderId);
                 memory.defender.push({
                     spawnRoom: creepSetup.queueRoom,
-                    order: creepSetup.destiny.order
+                    order: creepSetup.destiny.order,
                 });
-                if( DEBUG ) global.logSystem(creepSetup.queueRoom, `Defender queued for hostile creep ${creepSetup.destiny.order} in ${creepSetup.destiny.spottedIn}`);
+                if( DEBUG ) global.logSystem(creepSetup.queueRoom, `Defender queued for hostile creep ${creepSetup.destiny.order} in ${creepSetup.destiny.lastPos}`);
             }
         );
 
@@ -144,13 +168,26 @@ mod.orderDefenses = invaderCreep => {
             remainingThreat -= bodyThreat;
         } else {
             // Can't spawn. Invader will not get handled!
-            if( TRACE || DEBUG ) trace('Task', {task: 'defense', invaderId: invaderId, targetRoom: invaderCreep.pos.roomName}, 'Unable to spawn. Invader will not get handled!');
+            if( TRACE || DEBUG ) trace('Task', {Task:mod.name, [mod.name]:'orderDefenses', invaderId:invaderId, username:invaderCreep.owner.username, roomName:invaderCreep.pos.roomName}, 'Unable to spawn. Invader will not get handled!');
             return;
         }
     }
 };
+mod.handleSpawningStarted = function(params) { // params: {spawn: spawn.name, name: creep.name, destiny: creep.destiny}
+    if( !(params.destiny && params.destiny.invaderId) ) return;
+    const mem = Task.defense.memory(params.destiny.invaderId);
+    const defenderMem = _.find(mem.defender,'order',params.destiny.order);
+    if( defenderMem ) defenderMem.name = params.name;
+    console.log('DERPOKLDJLKFDSL:KJSFDL:KJSFD');
+};
 // define action assignment for defender creeps
 mod.nextAction = creep => {
+    // TODO REMOVE migration
+    if( !creep.data.destiny.lastPos ) {
+        creep.data.destiny.lastPos = {x: 25, y: 25, roomName: creep.data.destiny.spottedIn};
+    }
+    // TODO REMOVE end
+
     // override behaviours nextAction function
     // this could be a global approach to manipulate creep behaviour
 
@@ -173,18 +210,20 @@ mod.nextAction = creep => {
         return;
     }
     // travel to initial calling room
-    let callingRoom = Game.rooms[creep.data.destiny.spottedIn];
+    let callingRoom = Game.rooms[creep.data.destiny.lastPos.roomName];
     if( !callingRoom || callingRoom.hostiles.length > 0 ) {
+        creep.data.travelRoom = creep.data.destiny.lastPos.roomName;
+        creep.data.travelPos = creep.data.destiny.lastPos;
         Creep.action.travelling.assign(creep, creep);
-        creep.data.travelRoom = creep.data.destiny.spottedIn;
         return;
     }
     // check adjacent rooms for invasion
     let hasHostile = roomName => Game.rooms[roomName] && Game.rooms[roomName].hostiles.length > 0;
     let invasionRoom = creep.room.adjacentRooms.find(hasHostile);
     if( invasionRoom ) {
-        Creep.action.travelling.assign(creep, creep);
         creep.data.travelRoom = invasionRoom;
+        // TODO travelPos
+        Creep.action.travelling.assign(creep, creep);
         return;
     }
     // recycle self
