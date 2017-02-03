@@ -342,7 +342,7 @@ mod.strategies = {
             }
             // carry = ept * travel * 2 * 50 / 50
             const existingCarry = _.chain(existingCreeps)
-                .filter(function(c) {return (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime);})
+                .filter(function(c) {return c && (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime);})
                 .sum(function(c) {return haulerWeightToCarry(c.weight || 500);}).value();
             const queuedCarry = _.sum(queuedCreeps, c=>haulerWeightToCarry(c.weight || 500));
             const neededCarry = ept * travel * 2 + (memory.carryParts || 0) - existingCarry - queuedCarry;
