@@ -58,6 +58,18 @@ mod.handleSpawningStarted = params => {
     // save spawning creep to task memory
     memory.spawning[params.destiny.type].push(params);
 };
+mod.validateSpawning = (roomName, type) => {
+    let memory = Task.mining.memory(roomName);
+    let spawning = [];
+    let _validateSpawning = o => {
+        let spawn = Game.spawns[o.spawn];
+        if( spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
+            spawning.push(o);
+        }
+    };
+    memory.spawning[type].forEach(_validateSpawning);
+    memory.spawning[type] = spawning;
+};
 mod.handleSpawningCompleted = creep => {
     if ( !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != mod.name )
         return;
@@ -72,28 +84,13 @@ mod.handleSpawningCompleted = creep => {
     // save running creep to task memory
     memory.running[creep.data.destiny.type].push(creep.name);
     // clean/validate task memory spawning creeps
-    let spawning = [];
-    let validateSpawning = o => {
-        let spawn = Game.spawns[o.spawn];
-        if( spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
-            spawning.push(o);
-        }
-    };
-    memory.spawning[creep.data.destiny.type].forEach(validateSpawning);
-    memory.spawning[creep.data.destiny.type] = spawning;
+    Task.mining.validateSpawning(creep.data.destiny.room, creep.data.destiny.type);
 };
-// when a creep died (or will die soon)
-mod.handleCreepDied = name => {
-    // get creep memory
-    let mem = Memory.population[name];
-    // ensure it is a creep which has been requested by this task (else return)
-    if (!mem || !mem.destiny || !mem.destiny.task || mem.destiny.task != mod.name)
-        return;
+mod.validateRunning = (roomName, type, name) => {
     // get task memory
-    let memory = Task.mining.memory(mem.destiny.room);
-    // clean/validate task memory running creeps
+    let memory = Task.mining.memory(roomName);
     let running = [];
-    let validateRunning = o => {
+    let _validateRunning = o => {
         // invalidate dead or old creeps for predicted spawning
         let creep = Game.creeps[o];
         if( !creep || !creep.data ) return;
@@ -107,10 +104,20 @@ mod.handleCreepDied = name => {
             running.push(o);
         }
     };
-    if( memory.running[mem.creepType] ) {
-        memory.running[mem.creepType].forEach(validateRunning);
+    if( memory.running[type] ) {
+        memory.running[type].forEach(_validateRunning);
     }
-    memory.running[mem.creepType] = running;
+    memory.running[type] = running;
+};
+// when a creep died (or will die soon)
+mod.handleCreepDied = name => {
+    // get creep memory
+    let mem = Memory.population[name];
+    // ensure it is a creep which has been requested by this task (else return)
+    if (!mem || !mem.destiny || !mem.destiny.task || mem.destiny.task != mod.name)
+        return;
+    // clean/validate task memory running creeps
+    Task.mining.validateRunning(mem.destiny.room, mem.creepType, name);
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
