@@ -232,7 +232,7 @@ mod.checkForRequiredCreeps = (flag) => {
         }
     }
 };
-let findSpawning = (roomName, type) => {
+mod.findSpawning = (roomName, type) => {
     let spawning = [];
     _.forEach(Game.spawns, s => {
         if ((s.spawning && _.includes(s.spawning.name, type)) || (s.newSpawn && _.includes(s.newSpawn.name, type))) {
@@ -249,7 +249,7 @@ let findSpawning = (roomName, type) => {
     });
     return spawning;
 };
-let findRunning = (roomName, type) => {
+mod.findRunning = (roomName, type) => {
     let running = [];
     _.forEach(Game.creeps, c => {
         if (!c.spawning && c.data.creepType === type && c.data && c.data.destiny && c.data.destiny.room === roomName) {
@@ -269,16 +269,16 @@ mod.memory = key => {
     }
     if( !memory.hasOwnProperty('spawning') ){
         memory.spawning = {
-            remoteMiner: findSpawning(key, 'remoteMiner'), 
-            remoteHauler: findSpawning(key, 'remoteHauler'), 
-            remoteWorker: findSpawning(key, 'remoteWorker')
+            remoteMiner: Task.mining.findSpawning(key, 'remoteMiner'), 
+            remoteHauler: Task.mining.findSpawning(key, 'remoteHauler'), 
+            remoteWorker: Task.mining.findSpawning(key, 'remoteWorker')
         };
     }
     if( !memory.hasOwnProperty('running') ){
         memory.running = {
-            remoteMiner: findRunning(key, 'remoteMiner'), 
-            remoteHauler: findRunning(key, 'remoteHauler'), 
-            remoteWorker: findRunning(key, 'remoteWorker')
+            remoteMiner: Task.mining.findRunning(key, 'remoteMiner'), 
+            remoteHauler: Task.mining.findRunning(key, 'remoteHauler'), 
+            remoteWorker: Task.mining.findRunning(key, 'remoteWorker')
         };
     }
     // temporary migration
