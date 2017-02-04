@@ -144,7 +144,7 @@ mod.checkForRequiredCreeps = (flag) => {
     if( DEBUG && TRACE ) trace('Task', {Task:mod.name, flagName:flag.name, sourceCount, haulerCount, minerCount, workerCount, [mod.name]:'Flag.found'}, 'checking flag@', flag.pos);
 
     if(minerCount < sourceCount) {
-        if( DEBUG && TRACE ) trace('Task', {Task:mod.name, room:flag.pos.roomName, minerCount,
+        if( DEBUG && TRACE ) trace('Task', {Task:mod.name, room:roomName, minerCount,
             minerTTLs: _.map(_.map(memory.running.remoteMiner, n=>Game.creeps[n]), "ticksToLive"), [mod.name]:'minerCount'});
 
         for(let i = minerCount; i < sourceCount; i++) {
@@ -156,7 +156,7 @@ mod.checkForRequiredCreeps = (flag) => {
                     type: Task.mining.creep.miner.behaviour // custom
                 }, 
                 { // spawn room selection params
-                    targetRoom: flag.pos.roomName,
+                    targetRoom: roomName,
                     minEnergyCapacity: 550,
                     rangeRclRatio: 1,
                 },
@@ -233,27 +233,53 @@ mod.checkForRequiredCreeps = (flag) => {
         }
     }
 };
+let findSpawning = (roomName, type) => {
+    let spawning = [];
+    _.forEach(Game.spawns, s => {
+        if ((s.spawning && _.includes(s.spawning.name, type)) || (s.newSpawn && _.includes(s.newSpawn.name, type))) {
+            let c = Population.getCreep(s.spawning.name);
+            if (c && c.destiny.room === roomName) {
+                let params = {
+                    spawn: s.name,
+                    name: s.spawning.name,
+                    destiny: c.destiny
+                };
+                spawning.push(params);
+            }
+        }
+    });
+    return spawning;
+};
+let findRunning = (roomName, type) => {
+    let running = [];
+    _.forEach(Game.creeps, c => {
+        if (!c.spawning && c.data.creepType === type && c.data && c.data.destiny && c.data.destiny.room === roomName) {
+            running.push(c.name);
+        }
+    });
+    return running;
+};
 mod.memory = key => {
     let memory = Task.memory(mod.name, key);
     if( !memory.hasOwnProperty('queued') ){
         memory.queued = {
-            remoteMiner:[], 
-            remoteHauler:[], 
+            remoteMiner:[],
+            remoteHauler:[],
             remoteWorker:[]
         };
     }
     if( !memory.hasOwnProperty('spawning') ){
         memory.spawning = {
-            remoteMiner:[], 
-            remoteHauler:[], 
-            remoteWorker:[]
+            remoteMiner: findSpawning(key, 'remoteMiner'), 
+            remoteHauler: findSpawning(key, 'remoteHauler'), 
+            remoteWorker: findSpawning(key, 'remoteWorker')
         };
     }
     if( !memory.hasOwnProperty('running') ){
         memory.running = {
-            remoteMiner:[], 
-            remoteHauler:[], 
-            remoteWorker:[]
+            remoteMiner: findRunning(key, 'remoteMiner'), 
+            remoteHauler: findRunning(key, 'remoteHauler'), 
+            remoteWorker: findRunning(key, 'remoteWorker')
         };
     }
     // temporary migration
