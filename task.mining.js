@@ -98,8 +98,8 @@ mod.validateRunning = (roomName, type, name) => {
         // TODO: better distance calculation
         let prediction;
         if( creep.data.predictedRenewal ) prediction = creep.data.predictedRenewal;
-        else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName)*50));
-        else prediction = (routeRange(creep.data.homeRoom, flag.pos.roomName)+1) * 50;
+        else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName)*50));
+        else prediction = (routeRange(creep.data.homeRoom, roomName)+1) * 50;
         if( creep.name != name && creep.ticksToLive > prediction ) {
             running.push(o);
         }
