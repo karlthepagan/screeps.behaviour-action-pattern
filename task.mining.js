@@ -135,7 +135,6 @@ mod.checkForRequiredCreeps = (flag) => {
         return memory.queued[type].length + memory.spawning[type].length + runningCount;
     };
 
-    // trace didn't like c.remoteMiner
     let haulerCount = countExisting('remoteHauler');
     let minerCount = countExisting('remoteMiner');
     let workerCount = countExisting('remoteWorker');
