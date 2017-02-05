@@ -145,6 +145,7 @@ mod.checkForRequiredCreeps = (flag) => {
     let haulerCount = countExisting('remoteHauler');
     let minerCount = countExisting('remoteMiner');
     let workerCount = countExisting('remoteWorker');
+
     // TODO: calculate creeps by type needed per source / mineral
 
     if( DEBUG && TRACE ) trace('Task', {Task:mod.name, flagName:flag.name, sourceCount, haulerCount, minerCount, workerCount, [mod.name]:'Flag.found'}, 'checking flag@', flag.pos);

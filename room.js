@@ -883,7 +883,7 @@ mod.extend = function(){
         if( filter ) sites = this.constructionSites.filter(filter);
         else sites = this.constructionSites;
         if( sites.length == 0 ) return null;
-        let siteOrder = [STRUCTURE_SPAWN,STRUCTURE_EXTENSION,STRUCTURE_LINK,STRUCTURE_STORAGE,STRUCTURE_TOWER,STRUCTURE_ROAD,STRUCTURE_CONTAINER,STRUCTURE_EXTRACTOR,STRUCTURE_WALL,STRUCTURE_RAMPART];
+        let siteOrder = CONSTRUCTION_PRIORITY;
         let rangeOrder = site => {
             let order = siteOrder.indexOf(site.structureType); 
             return pos.getRangeTo(site) + ( order < 0 ? 100000 : (order * 100) );
@@ -908,11 +908,14 @@ mod.extend = function(){
             });
 
         let min = Math.max(ROAD_CONSTRUCTION_ABS_MIN, (data.reduce( (_sum, b) => _sum + b.n, 0 ) / data.length) * minDeviation);
-
         data = data.filter( e => {
-            return e.n > min &&
-                this.lookForAt(LOOK_STRUCTURES,e.x,e.y).length == 0 &&
-                this.lookForAt(LOOK_CONSTRUCTION_SITES,e.x,e.y).length == 0;
+            if (e.n >= min) {
+                let structures = this.lookForAt(LOOK_STRUCTURES,e.x,e.y);
+                return (structures.length === 0 || structures[0].structureType === STRUCTURE_RAMPART)
+                    && this.lookForAt(LOOK_CONSTRUCTION_SITES,e.x,e.y).length === 0;
+            } else {
+                return false;
+            }
         });
 
         // build roads on all most frequent used fields
