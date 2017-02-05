@@ -243,7 +243,7 @@ mod.checkForRequiredCreeps = (flag) => {
 mod.findSpawning = (roomName, type) => {
     let spawning = [];
     _.forEach(Game.spawns, s => {
-        if ((s.spawning && _.includes(s.spawning.name, type)) || (s.newSpawn && _.includes(s.newSpawn.name, type))) {
+        if (s.spawning && (_.includes(s.spawning.name, type) || (s.newSpawn && _.includes(s.newSpawn.name, type)))) {
             let c = Population.getCreep(s.spawning.name);
             if (c && c.destiny.room === roomName) {
                 let params = {
@@ -333,7 +333,8 @@ mod.carry = function(roomName, partChange) {
         memory.haulersChecked = maxHaulers;
     }
     memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
-    return `Task.${mod.name} overall hauler carry parts for ${roomName} are ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}`;
+    const population = Math.round(mod.carryPopulation(roomName) * 100);
+    return `Task.${mod.name} overall hauler carry parts for ${roomName} are ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently ${population}%`;
 };
 function haulerWeightToCarry(weight) {
     if( !weight || weight < 0) return 0;
@@ -345,6 +346,11 @@ function haulerCarryToWeight(carry) {
     const multiCarry = _.max([0, carry - 5]);
     return 500 + 150 * _.ceil(multiCarry * 0.5);
 }
+mod.carryPopulation = function(roomName, travelRoom) {
+    const neededWeight = Task.mining.strategies.hauler.maxWeight(roomName, travelRoom, undefined, false);
+    const totalWeight = Task.mining.strategies.hauler.maxWeight(roomName, travelRoom, undefined, true);
+    return 1 - neededWeight / totalWeight;
+};
 mod.strategies = {
     defaultStrategy: {
         name: `default-${mod.name}`,
@@ -360,10 +366,11 @@ mod.strategies = {
                 minEnergyCapacity: 500
             });
         },
-        maxWeight: function(roomName, travelRoom, memory) {
+        maxWeight: function(roomName, travelRoom, memory, ignorePopulation) {
             if( !memory ) memory = Task.mining.memory(roomName);
-            let existingCreeps = _.map(memory.running.remoteHauler, n=>Game.creeps[n]);
-            const queuedCreeps = _.union(memory.queued.remoteHauler, memory.spawning.remoteHauler);
+            if( !travelRoom ) travelRoom = mod.strategies.hauler.homeRoom(roomName);
+            const existingCreeps = ignorePopulation ? [] : _.map(memory.running.remoteHauler, n=>Game.creeps[n]);
+            const queuedCreeps = ignorePopulation ? [] : _.union(memory.queued.remoteHauler, memory.spawning.remoteHauler);
             const room = Game.rooms[roomName];
             // TODO loop per-source, take pinned delivery for route calc
             const travel = routeRange(roomName, travelRoom.name);
