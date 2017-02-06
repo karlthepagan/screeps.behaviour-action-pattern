@@ -181,7 +181,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // only spawn haulers for sources a miner has been spawned for
     let maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER_MULTIPLIER);
     if(haulerCount < maxHaulers && (!memory.haulersChecked || haulerCount < memory.haulersChecked)) {
-        // don't check for haulers again until one has died, otherwise it loops in maxWeight returning < REMOTE_HAULER_MIN_WEIGHT
+        // don't check for haulers again until one has died, otherwise it keeps trying to spawn a hauler but maxWeight < REMOTE_HAULER_MIN_WEIGHT
         memory.haulersChecked = haulerCount;
         for(let i = haulerCount; i < maxHaulers; i++) {
             const spawnRoom = mod.strategies.hauler.spawnRoom(roomName);
@@ -192,6 +192,8 @@ mod.checkForRequiredCreeps = (flag) => {
             const maxWeight = mod.strategies.hauler.maxWeight(roomName, storageRoom, memory); // TODO Task.strategies
             if( !maxWeight || (i >= 1 && maxWeight < REMOTE_HAULER_MIN_WEIGHT)) break;
 
+            // spawning a new hauler
+            memory.haulersChecked++;
             const creepDefinition = _.create(Task.mining.creep.hauler);
             creepDefinition.maxWeight = maxWeight;
             Task.spawn(
@@ -330,7 +332,7 @@ mod.carry = function(roomName, partChange) {
     let memory = Task.mining.memory(roomName);
     if (partChange > 0) {
         let maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER_MULTIPLIER);
-        memory.haulersChecked = maxHaulers;
+        memory.haulersChecked = 0; // we need to check again to see if we have enough haulers
     }
     memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
     const population = Math.round(mod.carryPopulation(roomName) * 100);
