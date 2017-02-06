@@ -58,8 +58,8 @@ mod.handleSpawningStarted = params => {
     // save spawning creep to task memory
     memory.spawning[params.destiny.type].push(params);
     // set a timer to make sure we re-validate this spawning entry if it still remains after the creep has spawned
-    const nextCheck = memory.spawning[params.destiny.type].nextCheck;
-    if (!nextCheck || (Game.time + params.spawnTime) < nextCheck) memory.spawning[params.destiny.type].nextCheck = Game.time + params.spawnTime + 1;
+    const nextCheck = memory.nextSpawnCheck[params.destiny.type];
+    if (!nextCheck || (Game.time + params.spawnTime) < nextCheck) memory.nextSpawnCheck[params.destiny.type] = Game.time + params.spawnTime + 1;
 };
 mod.validateSpawning = (roomName, type) => {
     let memory = Task.mining.memory(roomName);
@@ -75,7 +75,7 @@ mod.validateSpawning = (roomName, type) => {
     memory.spawning[type].forEach(_validateSpawning);
     memory.spawning[type] = spawning;
     // if we get to this tick without nextCheck getting updated (by handleSpawningCompleted) we need to validate again, it might be stuck.
-    memory.spawning[type].nextCheck = minRemaining ? Game.time + minRemaining : 0;
+    memory.nextSpawnCheck[type] = minRemaining ? Game.time + minRemaining : 0;
 };
 mod.handleSpawningCompleted = creep => {
     if ( !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != mod.name )
@@ -145,7 +145,7 @@ mod.checkForRequiredCreeps = (flag) => {
 
     // do we need to validate our spawning entries?
     for (const type of ['remoteHauler', 'remoteMiner', 'remoteWorker']) {
-        if (memory.spawning[type].nextCheck && Game.time > memory.spawning[type].nextCheck) {
+        if (memory.nextSpawnCheck[type] && Game.time > memory.nextSpawnCheck[type]) {
             if (DEBUG) console.log('Task.mining: Revalidating spawning entries for type', type, 'in room', roomName);
             Task.mining.validateSpawning(roomName, type);
         }
@@ -305,6 +305,9 @@ mod.memory = key => {
             remoteHauler: Task.mining.findRunning(key, 'remoteHauler'), 
             remoteWorker: Task.mining.findRunning(key, 'remoteWorker')
         };
+    }
+    if( !memory.hasOwnProperty('nextSpawnCheck') ){
+        memory.nextSpawnCheck = {};
     }
     // temporary migration
     if( memory.queued.miner ){
