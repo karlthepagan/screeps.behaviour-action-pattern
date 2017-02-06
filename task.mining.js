@@ -57,18 +57,25 @@ mod.handleSpawningStarted = params => {
     }
     // save spawning creep to task memory
     memory.spawning[params.destiny.type].push(params);
+    // set a timer to make sure we re-validate this spawning entry if it still remains after the creep has spawned
+    const nextCheck = memory.spawning[params.destiny.type].nextCheck;
+    if (!nextCheck || (Game.time + params.spawnTime) < nextCheck) memory.spawning[params.destiny.type].nextCheck = Game.time + params.spawnTime + 1;
 };
 mod.validateSpawning = (roomName, type) => {
     let memory = Task.mining.memory(roomName);
     let spawning = [];
+    let minRemaining;
     let _validateSpawning = o => {
         let spawn = Game.spawns[o.spawn];
         if( spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
+            minRemaining = !minRemaining || spawn.spawning.remainingTime < minRemaining ? spawn.spawning.remainingTime : minRemaining;
             spawning.push(o);
         }
     };
     memory.spawning[type].forEach(_validateSpawning);
     memory.spawning[type] = spawning;
+    // if we get to this tick without nextCheck getting updated (by handleSpawningCompleted) we need to validate again, it might be stuck.
+    memory.spawning[type].nextCheck = minRemaining ? Game.time + minRemaining : 0;
 };
 mod.handleSpawningCompleted = creep => {
     if ( !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != mod.name )
@@ -135,6 +142,14 @@ mod.checkForRequiredCreeps = (flag) => {
     else if( Memory.rooms[roomName] && Memory.rooms[roomName].sources ) sourceCount = Memory.rooms[roomName].sources.length;
     // never been there
     else sourceCount = 1;
+
+    // do we need to validate our spawning entries?
+    for (const type of ['remoteHauler', 'remoteMiner', 'remoteWorker']) {
+        if (memory.spawning[type].nextCheck && Game.time > memory.spawning[type].nextCheck) {
+            if (DEBUG) console.log('Task.mining: Revalidating spawning entries for type', type, 'in room', roomName);
+            Task.mining.validateSpawning(roomName, type);
+        }
+    }
 
     let countExisting = type => {
         let running = _.map(memory.running[type], n => Game.creeps[n]);
