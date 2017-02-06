@@ -294,15 +294,15 @@ mod.memory = key => {
     }
     if( !memory.hasOwnProperty('spawning') ){
         memory.spawning = {
-            remoteMiner: Task.mining.findSpawning(key, 'remoteMiner'), 
-            remoteHauler: Task.mining.findSpawning(key, 'remoteHauler'), 
+            remoteMiner: Task.mining.findSpawning(key, 'remoteMiner'),
+            remoteHauler: Task.mining.findSpawning(key, 'remoteHauler'),
             remoteWorker: Task.mining.findSpawning(key, 'remoteWorker')
         };
     }
     if( !memory.hasOwnProperty('running') ){
         memory.running = {
-            remoteMiner: Task.mining.findRunning(key, 'remoteMiner'), 
-            remoteHauler: Task.mining.findRunning(key, 'remoteHauler'), 
+            remoteMiner: Task.mining.findRunning(key, 'remoteMiner'),
+            remoteHauler: Task.mining.findRunning(key, 'remoteHauler'),
             remoteWorker: Task.mining.findRunning(key, 'remoteWorker')
         };
     }
@@ -356,6 +356,22 @@ mod.carry = function(roomName, partChange) {
     const population = Math.round(mod.carryPopulation(roomName) * 100);
     return `Task.${mod.name} overall hauler carry parts for ${roomName} are ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently ${population}%`;
 };
+mod.storage = function(roomName, storageRoom) {
+    const room = Game.rooms[roomName];
+    let memory = Task.mining.memory(roomName);
+    if (storageRoom) {
+        memory.storageRoom = storageRoom;
+        return `Task.${mod.name} set ${roomName} storage destination for haulers to ${storageRoom}`;
+    } else if (!memory.storageRoom) {
+        return `Task.${mod.name} mining ${roomName} custom storage rooms not set`;
+    } else if (storageRoom === false) {
+        const was = memory.storageRoom;
+        delete memory.storageRoom;
+        return `Task.${mod.name} cleared ${roomName} custom storage room, was ${was}`;
+    } else {
+        return `Task.${mod.name} mining ${roomName} sending haulers to ${memory.storageRoom}`
+    }
+};
 function haulerWeightToCarry(weight) {
     if( !weight || weight < 0) return 0;
     const multiWeight = _.max([0, weight - 500]);
@@ -378,6 +394,10 @@ mod.strategies = {
     hauler: {
         name: `hauler-${mod.name}`,
         homeRoom: function(flagRoomName) {
+            // Explicity set by user?
+            let memory = Task.mining.memory(flagRoomName);
+            if(memory.storageRoom) return Game.rooms[memory.storageRoom];
+            // Otherwise, score it
             return Room.bestSpawnRoomFor(flagRoomName);
         },
         spawnRoom: function(flagRoomName) {
