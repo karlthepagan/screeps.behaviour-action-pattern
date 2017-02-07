@@ -130,7 +130,7 @@ mod.handleCreepDied = name => {
 mod.needsReplacement = (creep) => {
     // this was used below in maxWeight, perhaps it's more accurate?
     // (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime)
-    return creep && (creep.ticksToLive || CREEP_LIFE_TIME) > (creep.data.predictedRenewal || 0);
+    return creep && (creep.ticksToLive || CREEP_LIFE_TIME) < (creep.data.predictedRenewal || 0);
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
