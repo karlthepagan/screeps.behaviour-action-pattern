@@ -309,8 +309,8 @@ mod.extend = function(){
         }
     };
     Creep.prototype.repairNearby = function( ) {
-        // if it has energy and a work part
-        if(this.carry.energy > 0 && this.hasActiveBodyparts(WORK)) {
+        // if it has energy and a work part, remoteMiners do repairs once the source is exhausted.
+        if(this.carry.energy > 0 && this.hasActiveBodyparts(WORK) && this.data.creepType !== 'remoteMiner') {
             let nearby = this.pos.findInRange(this.room.structures.repairable, 3);
             if( nearby && nearby.length > 0 ){
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, nearby[0].pos);

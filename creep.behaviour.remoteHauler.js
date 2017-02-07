@@ -55,11 +55,7 @@ mod.nextAction = function(creep){
         }
         if( this.assign(creep, Creep.action.uncharging) ) return;
         if( this.assign(creep, Creep.action.robbing) ) return;
-        // if it's not full
-        if( creep.sum < (creep.carryCapacity*0.8) ) {
-            // get some energy
-            if( this.assign(creep, Creep.action.picking) ) return;
-        }
+        if( this.assign(creep, Creep.action.picking) ) return;
         // carrier full or everything picked
         this.goHome(creep);
         return;
