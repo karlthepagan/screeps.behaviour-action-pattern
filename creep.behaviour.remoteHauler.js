@@ -48,6 +48,11 @@ mod.nextAction = function(creep){
     }
     // at target room
     else if( creep.data.destiny.room == creep.pos.roomName ){
+        // TODO: This should perhaps check which distance is greater and make this decision based on that plus its load size
+        if( creep.sum / creep.carryCapacity > REMOTE_HAULER_MIN_LOAD) {
+            this.goHome(creep);
+            return;
+        }
         if( this.assign(creep, Creep.action.uncharging) ) return;
         if( this.assign(creep, Creep.action.robbing) ) return;
         // if it's not full
@@ -62,7 +67,8 @@ mod.nextAction = function(creep){
     // somewhere
     else {
         let ret = false;
-        if( creep.sum > 0 )
+        // TODO: This should perhaps check which distance is greater and make this decision based on that plus its load size
+        if( creep.sum > REMOTE_HAULER_MIN_LOAD )
             ret = this.goHome(creep);
         else
             ret = this.gotoTargetRoom(creep);

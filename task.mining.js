@@ -55,6 +55,7 @@ mod.handleSpawningStarted = params => {
         else if( params.destiny.role == "worker" ) params.destiny.type = 'remoteWorker';
         memory.queued[params.destiny.type].pop();
     }
+    if (params.body) params.body = _.countBy(params.body);
     // save spawning creep to task memory
     memory.spawning[params.destiny.type].push(params);
     // set a timer to make sure we re-validate this spawning entry if it still remains after the creep has spawned
@@ -197,7 +198,6 @@ mod.checkForRequiredCreeps = (flag) => {
     let maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER_MULTIPLIER);
     if(haulerCount < maxHaulers && (!memory.haulersChecked || haulerCount < memory.haulersChecked)) {
         // don't check for haulers again until one has died, otherwise it keeps trying to spawn a hauler but maxWeight < REMOTE_HAULER_MIN_WEIGHT
-        memory.haulersChecked = haulerCount;
         for(let i = haulerCount; i < maxHaulers; i++) {
             const spawnRoom = mod.strategies.hauler.spawnRoom(roomName);
             if( !spawnRoom ) break;
@@ -205,7 +205,10 @@ mod.checkForRequiredCreeps = (flag) => {
             // haulers set homeRoom if closer storage exists
             const storageRoom = REMOTE_HAULER_REHOME && mod.strategies.hauler.homeRoom(roomName) || spawnRoom;
             const maxWeight = mod.strategies.hauler.maxWeight(roomName, storageRoom, memory); // TODO Task.strategies
-            if( !maxWeight || (i >= 1 && maxWeight < REMOTE_HAULER_MIN_WEIGHT)) break;
+            if( !maxWeight || (i >= 1 && maxWeight < REMOTE_HAULER_MIN_WEIGHT)) {
+                memory.haulersChecked = haulerCount;
+                break;
+            }
 
             // spawning a new hauler
             memory.haulersChecked++;
@@ -227,7 +230,7 @@ mod.checkForRequiredCreeps = (flag) => {
                     memory.queued[creepSetup.behaviour].push({
                         room: creepSetup.queueRoom,
                         name: creepSetup.name,
-                        weight: Creep.bodyCosts(creepSetup.parts),
+                        body: _.countBy(creepSetup.parts)
                     });
                 }
             );
@@ -369,21 +372,18 @@ mod.storage = function(roomName, storageRoom) {
         delete memory.storageRoom;
         return `Task.${mod.name} cleared ${roomName} custom storage room, was ${was}`;
     } else {
-        return `Task.${mod.name} mining ${roomName} sending haulers to ${memory.storageRoom}`
+        return `Task.${mod.name} mining ${roomName} sending haulers to ${memory.storageRoom}`;
     }
 };
-function haulerWeightToCarry(weight) {
-    if( !weight || weight < 0) return 0;
-    const multiWeight = _.max([0, weight - 500]);
-    return 5 + 2 * _.floor(multiWeight / 150);
-}
 function haulerCarryToWeight(carry) {
     if( !carry || carry < 0) return 0;
     const multiCarry = _.max([0, carry - 5]);
     return 500 + 150 * _.ceil(multiCarry * 0.5);
 }
 mod.carryPopulation = function(roomName, travelRoom) {
+    // how much more do we need to meet our goals
     const neededWeight = Task.mining.strategies.hauler.maxWeight(roomName, travelRoom, undefined, false);
+    // how much do we need for this room in total
     const totalWeight = Task.mining.strategies.hauler.maxWeight(roomName, travelRoom, undefined, true);
     return 1 - neededWeight / totalWeight;
 };
@@ -409,8 +409,8 @@ mod.strategies = {
         maxWeight: function(roomName, travelRoom, memory, ignorePopulation) {
             if( !memory ) memory = Task.mining.memory(roomName);
             if( !travelRoom ) travelRoom = mod.strategies.hauler.homeRoom(roomName);
-            const existingCreeps = ignorePopulation ? [] : _.map(memory.running.remoteHauler, n=>Game.creeps[n]);
-            const queuedCreeps = ignorePopulation ? [] : _.union(memory.queued.remoteHauler, memory.spawning.remoteHauler);
+            const existingHaulers = ignorePopulation ? [] : _.map(memory.running.remoteHauler, n=>Game.creeps[n]);
+            const queuedHaulers = ignorePopulation ? [] : _.union(memory.queued.remoteHauler, memory.spawning.remoteHauler);
             const room = Game.rooms[roomName];
             // TODO loop per-source, take pinned delivery for route calc
             const travel = routeRange(roomName, travelRoom.name);
@@ -421,14 +421,13 @@ mod.strategies = {
                 ept = 20; // assume profitable
             }
             // carry = ept * travel * 2 * 50 / 50
-            const existingCarry = _.chain(existingCreeps)
-                .filter(function(c) {return c && (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime);})
-                .sum(function(c) {return haulerWeightToCarry(c.weight || 500);}).value();
-            const queuedCarry = _.sum(queuedCreeps, c=>haulerWeightToCarry(c.weight || 500));
+            let validHaulers = _.filter(existingHaulers, c => c && (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime));
+            const existingCarry = _.sum(validHaulers, c => c.data.body ? c.data.body.carry : 5);
+            const queuedCarry = _.sum(queuedHaulers, c => c.body ? c.body.carry : 5);
             const neededCarry = ept * travel * 2 + (memory.carryParts || 0) - existingCarry - queuedCarry;
             const maxWeight = haulerCarryToWeight(neededCarry);
             if( DEBUG && TRACE ) trace('Task', {Task:mod.name, room: roomName, travelRoom: travelRoom.name,
-                haulers: existingCreeps.length + queuedCreeps.length, ept, travel, existingCarry, queuedCarry,
+                haulers: existingHaulers.length + queuedHaulers.length, ept, travel, existingCarry, queuedCarry,
                 neededCarry, maxWeight, [mod.name]:'maxWeight'});
             return maxWeight;
         }

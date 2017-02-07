@@ -36,7 +36,7 @@ mod.extend = function(){
         if(Array.isArray(partTypes))
             return (this.body.some((part) => ( partTypes.includes(part.type) && part.hits > 0 )));
         else return (this.body.some((part) => ( part.type == partTypes && part.hits > 0 )));
-    }
+    };
     Creep.prototype.run = function(behaviour){
         if( !this.spawning ){
             if(!behaviour && this.data && this.data.creepType) {
@@ -198,7 +198,7 @@ mod.extend = function(){
         } else { // evade
             // get path (don't ignore thiss)
             // try to move.
-            if( range > enoughRange ){
+            if( range > enoughRange ) {
                 this.honkEvade();
                 delete this.data.path;
                 this.data.path = this.getPath( targetPos, false);
@@ -210,7 +210,7 @@ mod.extend = function(){
                 const moveResult = this.move(direction);
                 if( moveResult != OK ) logErrorCode(this, moveResult);
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, direction, moveResult, drive:'evade', Creep:'drive'});
-            } else if( range > enoughRange ){
+            } else if( range > enoughRange ) {
                 this.say('NO PATH!');
                 this.data.targetId = null;
                 const leaveBorder = this.leaveBorder();
@@ -260,7 +260,7 @@ mod.extend = function(){
                     }
                 }
             );
-            path = ret.path
+            path = ret.path;
 
             this.data.fleePath = path;
         } else {
@@ -314,7 +314,6 @@ mod.extend = function(){
             let nearby = this.pos.findInRange(this.room.structures.repairable, 3);
             if( nearby && nearby.length > 0 ){
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, nearby[0].pos);
-                this.repair(nearby[0]);
             } else {
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, 'none');
             }
@@ -446,7 +445,7 @@ mod.multi = function (room, params) {
         while(iThreat < params.minThreat){
             maxThreatMulti += 1;
             iThreat += multiThreat;
-        };
+        }
     } else maxThreatMulti = Infinity;
     if(multiCosts === 0) return 0; // prevent divide-by-zero
     let maxParts = Math.floor((50 - params.fixedBody.length) / params.multiBody.length);
