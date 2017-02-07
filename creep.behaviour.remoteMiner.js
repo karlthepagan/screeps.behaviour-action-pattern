@@ -108,7 +108,7 @@ mod.mine = function(creep) {
                     }
                     if (source.container && source.container.sum > 0) {
                         if(CHATTY) creep.say('withdrawing', SAY_PUBLIC);
-                        return creep.withdraw(source.container);
+                        return creep.withdraw(source.container, RESOURCE_ENERGY);
                     }
                     if(CHATTY) creep.say('waiting', SAY_PUBLIC);
                     return; // idle
