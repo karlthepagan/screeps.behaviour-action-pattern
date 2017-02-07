@@ -127,6 +127,11 @@ mod.handleCreepDied = name => {
     // clean/validate task memory running creeps
     Task.mining.validateRunning(mem.destiny.room, mem.creepType, name);
 };
+mod.needsReplacement = (creep) => {
+    // this was used below in maxWeight, perhaps it's more accurate?
+    // (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime)
+    return creep && (creep.ticksToLive || CREEP_LIFE_TIME) > (creep.data.predictedRenewal || 0);
+};
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
     const roomName = flag.pos.roomName;
@@ -154,7 +159,7 @@ mod.checkForRequiredCreeps = (flag) => {
 
     let countExisting = type => {
         let running = _.map(memory.running[type], n => Game.creeps[n]);
-        let runningCount = _.filter(running, c => c && (c.ticksToLive || CREEP_LIFE_TIME) > (c.data.predictedRenewal || 0)).length;
+        let runningCount = _.filter(running, c => !Task.mining.needsReplacement(c)).length;
         return memory.queued[type].length + memory.spawning[type].length + runningCount;
     };
 
@@ -211,7 +216,6 @@ mod.checkForRequiredCreeps = (flag) => {
             }
 
             // spawning a new hauler
-            memory.haulersChecked++;
             const creepDefinition = _.create(Task.mining.creep.hauler);
             creepDefinition.maxWeight = maxWeight;
             Task.spawn(
@@ -227,6 +231,7 @@ mod.checkForRequiredCreeps = (flag) => {
                 },
                 creepSetup => { // onQueued callback
                     let memory = Task.mining.memory(creepSetup.destiny.room);
+                    memory.haulersChecked++;
                     memory.queued[creepSetup.behaviour].push({
                         room: creepSetup.queueRoom,
                         name: creepSetup.name,
@@ -421,7 +426,7 @@ mod.strategies = {
                 ept = 20; // assume profitable
             }
             // carry = ept * travel * 2 * 50 / 50
-            let validHaulers = _.filter(existingHaulers, c => c && (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime));
+            let validHaulers = _.filter(existingHaulers, c => !Task.mining.needsReplacement(c));
             const existingCarry = _.sum(validHaulers, c => c.data.body ? c.data.body.carry : 5);
             const queuedCarry = _.sum(queuedHaulers, c => c.body ? c.body.carry : 5);
             const neededCarry = ept * travel * 2 + (memory.carryParts || 0) - existingCarry - queuedCarry;
