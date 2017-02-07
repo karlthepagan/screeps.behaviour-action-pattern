@@ -312,10 +312,30 @@ mod.extend = function(){
         // if it has energy and a work part, remoteMiners do repairs once the source is exhausted.
         if(this.carry.energy > 0 && this.hasActiveBodyparts(WORK) && this.data.creepType !== 'remoteMiner') {
             let nearby = this.pos.findInRange(this.room.structures.repairable, 3);
-            if( nearby && nearby.length > 0 ){
+            if( nearby && nearby.length ){
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, nearby[0].pos);
+                if( this.repair(nearby[0]) == OK && this.carry.energy <= this.getActiveBodyparts(WORK) * REPAIR_POWER / REPAIR_COST ) {
+                    Creep.action.idle.assign(this);
+                };
             } else {
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, 'none');
+                // enable remote haulers to build their own roads and containers
+                if( REMOTE_HAULER_DRIVE_BY_BUILDING && this.data && this.data.creepType == 'remoteHauler' ) {
+                    // only search in a range of 1 to save cpu
+                    let nearby = this.pos.findInRange(this.room.constructionSites, REMOTE_HAULER_DRIVE_BY_BUILD_RANGE, {filter: (site) =>{
+                        return site.my && REMOTE_HAULER_DRIVE_BY_BUILD_ALL ||
+                            (site.structureType == STRUCTURE_CONTAINER ||
+                            site.structureType == STRUCTURE_ROAD);
+                    }});
+                    if( nearby && nearby.length ){
+                        if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'building', Creep:'buildNearby'}, nearby[0].pos);
+                        if( this.build(nearby[0]) == OK && this.carry.energy <= this.getActiveBodyparts(WORK) * BUILD_POWER ) {
+                            Creep.action.idle.assign(this);
+                        }
+                    } else {
+                        if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'building', Creep:'buildNearby'}, 'none');
+                    }
+                }
             }
         } else {
             if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, 'no WORK');
