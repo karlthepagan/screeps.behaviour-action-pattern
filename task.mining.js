@@ -69,11 +69,13 @@ mod.validateSpawning = (roomName, type) => {
     let _validateSpawning = o => {
         let spawn = Game.spawns[o.spawn];
         if( spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
-            minRemaining = !minRemaining || spawn.spawning.remainingTime < minRemaining ? spawn.spawning.remainingTime : minRemaining;
+            minRemaining = (!minRemaining || spawn.spawning.remainingTime < minRemaining) ? spawn.spawning.remainingTime : minRemaining;
             spawning.push(o);
         }
     };
-    memory.spawning[type].forEach(_validateSpawning);
+    if (memory.spawning[type]) {
+        memory.spawning[type].forEach(_validateSpawning);
+    }
     memory.spawning[type] = spawning;
     // if we get to this tick without nextCheck getting updated (by handleSpawningCompleted) we need to validate again, it might be stuck.
     memory.nextSpawnCheck[type] = minRemaining ? Game.time + minRemaining : 0;
@@ -108,9 +110,7 @@ mod.validateRunning = (roomName, type, name) => {
         if( creep.data.predictedRenewal ) prediction = creep.data.predictedRenewal;
         else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName)*50));
         else prediction = (routeRange(creep.data.homeRoom, roomName)+1) * 50;
-        if( creep.name != name && creep.ticksToLive > prediction ) {
-            running.push(o);
-        }
+        if( ( !name || creep.name !== name ) && creep.ticksToLive > prediction ) running.push(o);
     };
     if( memory.running[type] ) {
         memory.running[type].forEach(_validateRunning);
@@ -129,8 +129,8 @@ mod.handleCreepDied = name => {
 };
 mod.needsReplacement = (creep) => {
     // this was used below in maxWeight, perhaps it's more accurate?
-    // (c.ticksToLive || CREEP_LIFE_TIME) > (50 * travel - 40 + c.data.spawningTime)
-    return creep && (creep.ticksToLive || CREEP_LIFE_TIME) < (creep.data.predictedRenewal || 0);
+    // (c.ticksToLive || CREEP_LIFE_TIME) < (50 * travel - 40 + c.data.spawningTime)
+    return !creep || (creep.ticksToLive || CREEP_LIFE_TIME) < (creep.data.predictedRenewal || 0);
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
@@ -158,7 +158,17 @@ mod.checkForRequiredCreeps = (flag) => {
     }
 
     let countExisting = type => {
-        let running = _.map(memory.running[type], n => Game.creeps[n]);
+        let invalidEntry = false;
+        let running = _.map(memory.running[type], n => {
+            let c = Game.creeps[n];
+            if (!c) invalidEntry = true;
+            return c;
+        });
+        if (invalidEntry) {
+            if (DEBUG) console.log('Task.mining: Revalidating running entries for type', type, 'in room', roomName);
+            mod.validateRunning(roomName, type);
+            running = _.map(memory.running[type], n => Game.creeps[n]);
+        }
         let runningCount = _.filter(running, c => !Task.mining.needsReplacement(c)).length;
         return memory.queued[type].length + memory.spawning[type].length + runningCount;
     };
@@ -362,18 +372,21 @@ mod.carry = function(roomName, partChange) {
     }
     memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
     const population = Math.round(mod.carryPopulation(roomName) * 100);
-    return `Task.${mod.name}: hauler carry capacity for ${roomName} ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently ${population}%`;
+    return `Task.${mod.name}: hauler carry capacity for ${roomName} ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently at ${population}% of desired capacity`;
 };
 mod.checkCapacity= function(roomName) {
     let checkRoomCapacity = function(roomName, minPopulation, maxDropped) {
         const population = Math.round(mod.carryPopulation(roomName) * 100);
-        let dropped = Game.rooms[roomName].find(FIND_DROPPED_ENERGY);
+        const room = Game.rooms[roomName];
+        let dropped = room ? room.find(FIND_DROPPED_ENERGY): null;
+        let message = 'unknown dropped energy, room not visible.';
         let totalDropped = 0;
-        if (dropped.length) {
+        if (dropped) {
             totalDropped = _.sum(dropped, d => d.energy);
+            message = 'with ' + totalDropped + ' dropped energy.';
         }
         if (population <= minPopulation || totalDropped >= maxDropped) {
-            console.log(mod.carry(roomName), totalDropped, 'dropped energy');
+            console.log(mod.carry(roomName), message);
             return true;
         }
         return false;
@@ -387,7 +400,7 @@ mod.checkCapacity= function(roomName) {
             total++;
             if (checkRoomCapacity(roomName, 90, 1000)) count++;
         }
-        return `Task.${mod.name} ${count} rooms under-capacity out of ${total}`;
+        return `Task.${mod.name} ${count} rooms under-capacity out of ${total}.`;
     }
 };
 mod.storage = function(roomName, storageRoom) {
