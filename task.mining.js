@@ -212,6 +212,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // only spawn haulers for sources a miner has been spawned for
     let maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER_MULTIPLIER);
     if(haulerCount < maxHaulers && (!memory.haulersChecked || haulerCount < memory.haulersChecked)) {
+        if (!memory.haulersChecked) memory.haulersChecked = 0;
         // don't check for haulers again until one has died, otherwise it keeps trying to spawn a hauler but maxWeight < REMOTE_HAULER_MIN_WEIGHT
         for(let i = haulerCount; i < maxHaulers; i++) {
             const spawnRoom = mod.strategies.hauler.spawnRoom(roomName);
