@@ -53,9 +53,9 @@ mod.nextAction = function(creep){
             this.goHome(creep);
             return;
         }
+        if( this.assign(creep, Creep.action.picking) ) return;
         if( this.assign(creep, Creep.action.uncharging) ) return;
         if( this.assign(creep, Creep.action.robbing) ) return;
-        if( this.assign(creep, Creep.action.picking) ) return;
         // carrier full or everything picked
         this.goHome(creep);
         return;
@@ -64,10 +64,12 @@ mod.nextAction = function(creep){
     else {
         let ret = false;
         // TODO: This should perhaps check which distance is greater and make this decision based on that plus its load size
-        if( creep.sum > REMOTE_HAULER_MIN_LOAD )
+        if( creep.sum / creep.carryCapacity > REMOTE_HAULER_MIN_LOAD )
             ret = this.goHome(creep);
-        else
+        else {
+            if( this.assign(creep, Creep.action.picking) ) return;
             ret = this.gotoTargetRoom(creep);
+        }
         if (ret) {
             return;
         }
