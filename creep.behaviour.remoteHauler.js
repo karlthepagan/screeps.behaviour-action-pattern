@@ -66,10 +66,8 @@ mod.nextAction = function(creep){
         // TODO: This should perhaps check which distance is greater and make this decision based on that plus its load size
         if( creep.sum / creep.carryCapacity > REMOTE_HAULER_MIN_LOAD )
             ret = this.goHome(creep);
-        else {
-            if( this.assign(creep, Creep.action.picking) ) return;
+        else
             ret = this.gotoTargetRoom(creep);
-        }
         if (ret) {
             return;
         }
