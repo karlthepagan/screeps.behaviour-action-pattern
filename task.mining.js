@@ -371,7 +371,7 @@ mod.checkCapacity= function(roomName) {
             let dropped = Game.rooms[roomName].find(FIND_DROPPED_ENERGY);
             let totalDropped = 0;
             if (dropped.length) {
-                totalDropped = _.reduce(dropped, d => d.energy);
+                totalDropped = _.sum(dropped, d => d.energy);
             }
             console.log(mod.carry(roomName), totalDropped, 'dropped energy');
             return true;
