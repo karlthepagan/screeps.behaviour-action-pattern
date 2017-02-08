@@ -211,9 +211,7 @@ mod.checkForRequiredCreeps = (flag) => {
 
     // only spawn haulers for sources a miner has been spawned for
     let maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER_MULTIPLIER);
-    if(haulerCount < maxHaulers && (!memory.haulersChecked || haulerCount < memory.haulersChecked)) {
-        if (!memory.haulersChecked) memory.haulersChecked = 0;
-        // don't check for haulers again until one has died, otherwise it keeps trying to spawn a hauler but maxWeight < REMOTE_HAULER_MIN_WEIGHT
+    if(haulerCount < maxHaulers && (!memory.capacityLastChecked || Game.time - memory.capacityLastChecked > REMOTE_HAULER_CHECK_INTERVAL)) {
         for(let i = haulerCount; i < maxHaulers; i++) {
             const spawnRoom = mod.strategies.hauler.spawnRoom(roomName);
             if( !spawnRoom ) break;
@@ -222,7 +220,7 @@ mod.checkForRequiredCreeps = (flag) => {
             const storageRoom = REMOTE_HAULER_REHOME && mod.strategies.hauler.homeRoom(roomName) || spawnRoom;
             const maxWeight = mod.strategies.hauler.maxWeight(roomName, storageRoom, memory); // TODO Task.strategies
             if( !maxWeight || (i >= 1 && maxWeight < REMOTE_HAULER_MIN_WEIGHT)) {
-                memory.haulersChecked = haulerCount;
+                memory.capacityLastChecked = Game.time;
                 break;
             }
 
@@ -242,7 +240,6 @@ mod.checkForRequiredCreeps = (flag) => {
                 },
                 creepSetup => { // onQueued callback
                     let memory = Task.mining.memory(creepSetup.destiny.room);
-                    memory.haulersChecked++;
                     memory.queued[creepSetup.behaviour].push({
                         room: creepSetup.queueRoom,
                         name: creepSetup.name,
@@ -367,10 +364,6 @@ mod.creep = {
 };
 mod.carry = function(roomName, partChange) {
     let memory = Task.mining.memory(roomName);
-    if (partChange > 0) {
-        let maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER_MULTIPLIER);
-        memory.haulersChecked = 0; // we need to check again to see if we have enough haulers
-    }
     memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
     const population = Math.round(mod.carryPopulation(roomName) * 100);
     return `Task.${mod.name}: hauler carry capacity for ${roomName} ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently at ${population}% of desired capacity`;
