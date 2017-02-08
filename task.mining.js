@@ -362,22 +362,23 @@ mod.carry = function(roomName, partChange) {
     }
     memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
     const population = Math.round(mod.carryPopulation(roomName) * 100);
-    return `Task.${mod.name} overall hauler carry parts for ${roomName} are ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently ${population}%`;
+    return `Task.${mod.name}: hauler carry capacity for ${roomName} ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently ${population}%`;
 };
 mod.storage = function(roomName, storageRoom) {
     const room = Game.rooms[roomName];
     let memory = Task.mining.memory(roomName);
     if (storageRoom) {
+        const was = memory.storageRoom;
         memory.storageRoom = storageRoom;
-        return `Task.${mod.name} set ${roomName} storage destination for haulers to ${storageRoom}`;
+        return `Task.${mod.name}: room ${roomName}, now sending haulers to ${storageRoom}, (was ${was})`;
     } else if (!memory.storageRoom) {
-        return `Task.${mod.name} mining ${roomName} custom storage rooms not set`;
+        return `Task.${mod.name}: room ${roomName}, no custom storage destination`;
     } else if (storageRoom === false) {
         const was = memory.storageRoom;
         delete memory.storageRoom;
-        return `Task.${mod.name} cleared ${roomName} custom storage room, was ${was}`;
+        return `Task.${mod.name}: room ${roomName}, cleared custom storage room (was ${was})`;
     } else {
-        return `Task.${mod.name} mining ${roomName} sending haulers to ${memory.storageRoom}`;
+        return `Task.${mod.name}: room ${roomName}, sending haulers to ${memory.storageRoom}`;
     }
 };
 function haulerCarryToWeight(carry) {
