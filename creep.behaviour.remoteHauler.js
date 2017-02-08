@@ -55,7 +55,7 @@ mod.nextAction = function(creep){
         }
         // picking last until we have strategies that can compare cost vs benefit otherwise remoteHaulers bounce between piles of dropped energy
         if( this.assign(creep, Creep.action.uncharging) ) return;
-        if( this.assign(creep, Creep.action.robbing) ) return;
+        // if( this.assign(creep, Creep.action.robbing) ) return;
         if( this.assign(creep, Creep.action.picking) ) return;
         // carrier full or everything picked
         this.goHome(creep);
