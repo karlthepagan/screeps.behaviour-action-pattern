@@ -152,7 +152,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // do we need to validate our spawning entries?
     for (const type of ['remoteHauler', 'remoteMiner', 'remoteWorker']) {
         if (memory.nextSpawnCheck[type] && Game.time > memory.nextSpawnCheck[type]) {
-            if (DEBUG) console.log('Task.mining: Revalidating spawning entries for type', type, 'in room', roomName);
+            if( DEBUG && TRACE ) trace('Task', {Task:mod.name, roomName, flagName:flag.name, [mod.name]:'Flag.found', 'Flag.found':'revalidating', revalidating:type});
             Task.mining.validateSpawning(roomName, type);
         }
     }
@@ -165,7 +165,7 @@ mod.checkForRequiredCreeps = (flag) => {
             return c;
         });
         if (invalidEntry) {
-            if (DEBUG) console.log('Task.mining: Revalidating running entries for type', type, 'in room', roomName);
+            if( DEBUG && TRACE ) trace('Task', {Task:mod.name, roomName, flagName:flag.name, [mod.name]:'Flag.found', 'Flag.found':'revalidating', revalidating:type});
             mod.validateRunning(roomName, type);
             running = _.map(memory.running[type], n => Game.creeps[n]);
         }
