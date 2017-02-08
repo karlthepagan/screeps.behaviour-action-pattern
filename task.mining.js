@@ -364,6 +364,32 @@ mod.carry = function(roomName, partChange) {
     const population = Math.round(mod.carryPopulation(roomName) * 100);
     return `Task.${mod.name}: hauler carry capacity for ${roomName} ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently ${population}%`;
 };
+mod.checkCapacity= function(roomName) {
+    let checkRoomCapacity = function(roomName, threshold) {
+        const population = Math.round(mod.carryPopulation(roomName) * 100);
+        if (population <= threshold) {
+            let dropped = Game.rooms[roomName].find(FIND_DROPPED_ENERGY);
+            let totalDropped = 0;
+            if (dropped.length) {
+                totalDropped = _.reduce(dropped, d => d.energy);
+            }
+            console.log(mod.carry(roomName), totalDropped, 'dropped energy');
+            return true;
+        }
+        return false;
+    };
+    if (roomName) {
+        return checkRoomCapacity(roomName, 100);
+    } else {
+        let count = 0;
+        let total = 0;
+        for (const roomName in Memory.tasks.mining) {
+            total++;
+            if (checkRoomCapacity(roomName, 90)) count++;
+        }
+        return `Task.${mod.name} ${count} rooms under-capacity out of ${total}`;
+    }
+};
 mod.storage = function(roomName, storageRoom) {
     const room = Game.rooms[roomName];
     let memory = Task.mining.memory(roomName);
