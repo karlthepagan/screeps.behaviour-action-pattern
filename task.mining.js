@@ -467,8 +467,8 @@ mod.strategies = {
             }
             // carry = ept * travel * 2 * 50 / 50
             let validHaulers = _.filter(existingHaulers, c => !Task.mining.needsReplacement(c));
-            const existingCarry = _.sum(validHaulers, c => c.data.body ? c.data.body.carry : 5);
-            const queuedCarry = _.sum(queuedHaulers, c => c.body ? c.body.carry : 5);
+            const existingCarry = _.sum(validHaulers, c => (c && c.data && c.data.body) ? c.data.body.carry : 5);
+            const queuedCarry = _.sum(queuedHaulers, c => (c && c.body && c.body) ? c.body.carry : 5);
             const neededCarry = ept * travel * 2 + (memory.carryParts || 0) - existingCarry - queuedCarry;
             const maxWeight = haulerCarryToWeight(neededCarry);
             if( DEBUG && TRACE ) trace('Task', {Task:mod.name, room: roomName, travelRoom: travelRoom.name,
