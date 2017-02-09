@@ -3,7 +3,12 @@ module.exports = action;
 action.isValidTarget = function(target){ return target != null; };
 action.isAddableAction = function(){ return true; };
 action.isAddableTarget = function(){ return true; };
-action.newTarget = function(creep){ return null; }
+action.newTarget = function(creep){
+    if( creep.data.travelPos || creep.data.travelRoom ) {
+        return creep;
+    }
+    return null;
+};
 action.step = function(creep){
     if(CHATTY) creep.say(this.name, SAY_PUBLIC);
     if( creep.target ){
@@ -22,12 +27,16 @@ action.step = function(creep){
                 targetRange = 24;
                 pos = new RoomPosition(25, 25, creep.data.travelRoom);
             }
+            if( creep.pos.roomName === pos.roomName ) {
+                delete creep.target;
+                delete creep.data.travelRoom;
+                delete creep.data.travelPos;
+            }
         }
-        if( creep.target.id == creep.id ) pos = new RoomPosition(25, 25, creep.data.travelRoom);
         else pos = creep.target.pos;
         creep.drive( pos, this.reachedRange, targetRange, Infinity );
     }
-    if( !creep.target || creep.target.pos.roomName == creep.pos.roomName ){
+    if( !creep.target || creep.target !== creep && creep.target.pos.roomName == creep.pos.roomName ){
         // unregister
         delete creep.action;
         delete creep.target;
