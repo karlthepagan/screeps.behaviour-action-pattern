@@ -241,7 +241,15 @@ mod.extend = function(){
                 range,
                 maxRooms,
                 costCallback: function (roomName, cost) {
-                    return roomsOnPath[roomName] && cost || false;
+                    const result = roomsOnPath[roomName] && cost || false;
+                    if (!result) {
+                        for(let x = 50; x >= 0; x--) {
+                            for(let y = 50; y >= 0; y--) {
+                                cost.set(x,y,Infinity);
+                            }
+                        }
+                    }
+                    return result;
                 },
             });
             if( !(path && path.length) ) {

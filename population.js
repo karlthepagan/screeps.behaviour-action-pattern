@@ -25,8 +25,11 @@ mod.registerCreep = function(creepName, creepType, creepCost, room, spawnName, b
     this.countCreep(room, entry);
 };
 mod.unregisterCreep = function(creepName){
+    console.log('unregister', creepName);
+    const entry = Memory.population[creepName];
     delete Memory.population[creepName];
     delete Memory.creeps[creepName];
+    return entry;
 };
 mod.registerAction = function(creep, action, target, entry) {
     if( DEBUG && TRACE ) trace('Population', {creepName:this.name, registerAction:action.name, target:target.name || target.id, Population:'registerAction'});

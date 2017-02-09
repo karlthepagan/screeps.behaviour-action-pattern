@@ -118,15 +118,19 @@ mod.handleSpawningCompleted = function(creep) {
 };
 mod.handleCreepDied = function(creepName) {
     const entry = Population.getCreep(creepName);
-    if( !(entry && entry.task === mod.name) ) return;
+    if( !(entry && entry.task === mod.name) ) {
+        console.log(creepName, 'died, no pop entry');
+        return;
+    }
 
-    // clean/validate task memory running creeps
-    mod.validateRunning(entry.targetName, creepName);
+    const running = mod.memory(entry.targetName).running;
+    console.log('dead',creepName,'removing from',running);
+    _.remove(running, creepName);
 };
 mod.creep = {
     recycler: {
         fixedBody: [CARRY, MOVE],
-        multiBody: [CARRY, MOVE],
+        // multiBody: [CARRY, MOVE],
         name: "recycler",
         behaviour: "recycler",
         queue: 'Low'

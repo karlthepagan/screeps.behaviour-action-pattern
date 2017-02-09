@@ -54,6 +54,7 @@ mod.run = function() {
 };
 
 mod.drawRoomInfo = function(room) {
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(room.name);
 	let x;
 	let y = 0;
@@ -123,11 +124,13 @@ mod.drawRoomInfo = function(room) {
 
 mod.drawSpawnInfo = function(spawn) {
 	if (!spawn.spawning) return;
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(spawn.room.name);
 	vis.text(`${spawn.spawning.name} (${((spawn.spawning.needTime - spawn.spawning.remainingTime) / spawn.spawning.needTime * 100).toFixed(1)}%)`, spawn.pos.x + 1, spawn.pos.y - 0.5, {align: 'left', size: 0.4,});
 };
 
 mod.drawMineralInfo = function(mineral) {
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(mineral.room.name);
 	let x = mineral.pos.x + 1;
 	let y = mineral.pos.y - 0.5;
@@ -139,6 +142,7 @@ mod.drawMineralInfo = function(mineral) {
 };
 
 mod.drawSourceInfo = function(source) {
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(source.room.name);
 	let x = source.pos.x + 0.5;
 	let y = source.pos.y - 0.5;
@@ -150,6 +154,7 @@ mod.drawSourceInfo = function(source) {
 };
 
 mod.drawControllerInfo = function(controller) {
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(controller.room.name);
 	const BASE_X = controller.pos.x + 1;
 	let y = controller.pos.y - 0.5;
@@ -163,6 +168,7 @@ mod.drawControllerInfo = function(controller) {
 };
 
 mod.highlightWeakest = function(room, type) {
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(room.name);
 	let weakest = _(room.find(FIND_STRUCTURES)).filter(s => s.structureType === type).min(s => s.hits);
 	if (weakest) {
@@ -173,6 +179,7 @@ mod.highlightWeakest = function(room, type) {
 
 mod.storage = function(room) {
 	if (room.storage) {
+		if (!global.RoomVisual) return;
 		const vis = new RoomVisual(room.name);
 		const x = 43;
 		let y = 4.5;
@@ -183,6 +190,7 @@ mod.storage = function(room) {
 
 mod.terminal = function(room) {
 	if (room.terminal) {
+		if (!global.RoomVisual) return;
 		const vis = new RoomVisual(room.name);
 		const x = 43;
 		let y = 4.5;
@@ -215,6 +223,7 @@ mod.setHeatMapData = function(room) {
 };
 
 mod.drawHeatMapData = function(room) {
+	if (!global.RoomVisual) return;
 	const vis = new RoomVisual(room.name);
 	const data = Object.keys(room.memory.heatmap).map(k => {
 		return {
