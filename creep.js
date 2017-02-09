@@ -36,7 +36,7 @@ mod.extend = function(){
         if(Array.isArray(partTypes))
             return (this.body.some((part) => ( partTypes.includes(part.type) && part.hits > 0 )));
         else return (this.body.some((part) => ( part.type == partTypes && part.hits > 0 )));
-    }
+    };
     Creep.prototype.run = function(behaviour){
         if( !this.spawning ){
             if(!behaviour && this.data && this.data.creepType) {
@@ -198,7 +198,7 @@ mod.extend = function(){
         } else { // evade
             // get path (don't ignore thiss)
             // try to move.
-            if( range > enoughRange ){
+            if( range > enoughRange ) {
                 this.honkEvade();
                 delete this.data.path;
                 this.data.path = this.getPath( targetPos, false);
@@ -210,7 +210,7 @@ mod.extend = function(){
                 const moveResult = this.move(direction);
                 if( moveResult != OK ) logErrorCode(this, moveResult);
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, direction, moveResult, drive:'evade', Creep:'drive'});
-            } else if( range > enoughRange ){
+            } else if( range > enoughRange ) {
                 this.say('NO PATH!');
                 this.data.targetId = null;
                 const leaveBorder = this.leaveBorder();
@@ -260,7 +260,7 @@ mod.extend = function(){
                     }
                 }
             );
-            path = ret.path
+            path = ret.path;
 
             this.data.fleePath = path;
         } else {
@@ -273,7 +273,9 @@ mod.extend = function(){
     Creep.prototype.idleMove = function( ) {
         if( this.fatigue > 0 ) return;
         // check if on road/structure
-        let here = this.room.lookForAt(LOOK_STRUCTURES, this.pos);
+        let here = _.chain(this.room.structures.piles).filter('pos', this.pos)
+            .concat(this.room.lookForAt(LOOK_STRUCTURES, this.pos))
+            .value();
         if( here && here.length > 0 ) {
             let path;
             if( !this.data.idlePath || this.data.idlePath.length < 2 || this.data.idlePath[0].x != this.pos.x || this.data.idlePath[0].y != this.pos.y || this.data.idlePath[0].roomName != this.pos.roomName ) {
@@ -307,14 +309,33 @@ mod.extend = function(){
         }
     };
     Creep.prototype.repairNearby = function( ) {
-        // if it has energy and a work part
-        if(this.carry.energy > 0 && this.hasActiveBodyparts(WORK)) {
+        // if it has energy and a work part, remoteMiners do repairs once the source is exhausted.
+        if(this.carry.energy > 0 && this.hasActiveBodyparts(WORK) && this.data.creepType !== 'remoteMiner') {
             let nearby = this.pos.findInRange(this.room.structures.repairable, 3);
-            if( nearby && nearby.length > 0 ){
+            if( nearby && nearby.length ){
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, nearby[0].pos);
-                this.repair(nearby[0]);
+                if( this.repair(nearby[0]) == OK && this.carry.energy <= this.getActiveBodyparts(WORK) * REPAIR_POWER / REPAIR_COST ) {
+                    Creep.action.idle.assign(this);
+                };
             } else {
                 if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, 'none');
+                // enable remote haulers to build their own roads and containers
+                if( REMOTE_HAULER_DRIVE_BY_BUILDING && this.data && this.data.creepType == 'remoteHauler' ) {
+                    // only search in a range of 1 to save cpu
+                    let nearby = this.pos.findInRange(this.room.constructionSites, REMOTE_HAULER_DRIVE_BY_BUILD_RANGE, {filter: (site) =>{
+                        return site.my && REMOTE_HAULER_DRIVE_BY_BUILD_ALL ||
+                            (site.structureType == STRUCTURE_CONTAINER ||
+                            site.structureType == STRUCTURE_ROAD);
+                    }});
+                    if( nearby && nearby.length ){
+                        if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'building', Creep:'buildNearby'}, nearby[0].pos);
+                        if( this.build(nearby[0]) == OK && this.carry.energy <= this.getActiveBodyparts(WORK) * BUILD_POWER ) {
+                            Creep.action.idle.assign(this);
+                        }
+                    } else {
+                        if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'building', Creep:'buildNearby'}, 'none');
+                    }
+                }
             }
         } else {
             if( DEBUG && TRACE ) trace('Creep', {creepName:this.name, Action:'repairing', Creep:'repairNearby'}, 'no WORK');
@@ -444,7 +465,7 @@ mod.multi = function (room, params) {
         while(iThreat < params.minThreat){
             maxThreatMulti += 1;
             iThreat += multiThreat;
-        };
+        }
     } else maxThreatMulti = Infinity;
     if(multiCosts === 0) return 0; // prevent divide-by-zero
     let maxParts = Math.floor((50 - params.fixedBody.length) / params.multiBody.length);
