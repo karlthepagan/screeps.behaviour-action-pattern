@@ -161,6 +161,7 @@ mod.extend = function(){
 
             if( this.data.path && this.data.path.length > 0 ) {
                 const direction = +this.data.path.charAt(0);
+                // TODO border limited move, detect routing failure
                 const moveResult = this.move(direction);
                 if( moveResult == OK ) { // OK is no guarantee that it will move to the next pos.
                     this.data.moveMode = 'auto';
