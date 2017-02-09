@@ -11,6 +11,22 @@ let mod = {
     CENSUS_ANNOUNCEMENTS: true, // log birth and death
     SELL_NOTIFICATION: true, // send mail when selling minerals
     SPAWN_INTERVAL: 5, // loops between regular spawn probe
+    ROOM_VISUALS: false, // display basic room statistics with RoomVisuals
+    VISUALS: { // if ROOM_VISUALS is enabled, you can select what you want to display - All is a bit much for some people.
+        ROOM: true, // displays basic info relative to the room
+        ROOM_GLOBAL: true, // displays basic info relative to your account - requires ROOM: true
+        SPAWN: true, // displays creep name and spawn progress percentage when spawning
+        CONTROLLER: true, // displays level, progress, and ticks to downgrade if active
+        STORAGE: true, // displays storage contents
+        TERMINAL: true, // displays terminal contents
+        MINERAL: true, // displays mineral amount, or ticks to regen
+        SOURCE: true, // displays energy amount, or ticks to regen
+        WALL: false, // highlight weakest wall and display hits
+        RAMPART: false, // highlight weakest rampart and display hits
+        ROAD: false, // highlight weakest road and display hits
+        HEATMAP: false, // collects creep positioning to display a heatmap
+        HEATMAP_INTERVAL: 2, // intervals between collections
+    },
     MAX_STORAGE_ENERGY: { // get rid of energy when reached
         1: 2000,
         2: 2000,
