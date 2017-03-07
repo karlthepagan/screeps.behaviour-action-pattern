@@ -67,3 +67,30 @@ mod.gotoTargetRoom = function(creep){
 mod.goHome = function(creep){
     return Creep.action.travelling.assignRoom(creep, creep.data.homeRoom);
 };
+mod.strategies = {
+    defaultStrategy: {
+        name: `default-${mod.name}`,
+        canWithdrawEnergy: function (creep) {
+            return _.constant(true);
+        }
+    },
+};
+mod.selectStrategies = function(actionName) {
+    return [mod.strategies.defaultStrategy, mod.strategies[actionName]];
+};
+mod.strategies = {
+    defaultStrategy: {
+        name: `default-${mod.name}`,
+        canWithdrawEnergy: function (creep) {
+            return _.constant(true);
+        },
+    },
+    picking: {
+        isAddableAction: function (creep) {
+            return true;
+        },
+        maxPerTarget: function() {
+            return Infinity;
+        },
+    },
+};
