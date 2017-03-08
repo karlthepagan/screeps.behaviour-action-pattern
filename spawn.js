@@ -31,7 +31,7 @@ mod.extend = function(){
         return busy;
     };
     Spawn.prototype.createCreepBySetup = function(setup){
-        if( DEBUG && TRACE ) trace('Spawn',{setupType:this.type, rcl:this.room.controller.level, energy:this.room.energyAvailable, maxEnergy:this.room.energyCapacityAvailable, Spawn:'createCreepBySetup'}, 'creating creep');
+        if( DEBUG && TRACE ) logEvent(['Spawn', 'createCreepBySetup'], {setupType:setup.type, rcl:this.room.controller.level, energy:this.room.energyAvailable, maxEnergy:this.room.energyCapacityAvailable});
         var params = setup.buildParams(this);
         if( this.create(params.parts, params.name, params.setup) )
             return params;
@@ -101,7 +101,7 @@ mod.register = function(){
     Creep.spawningCompleted.on( creep => mod.handleSpawningCompleted(creep) );
 };
 mod.handleSpawningCompleted = function(creep){
-    if( DEBUG && TRACE ) trace('Spawn', {behaviour:creep.data.creepType, creepName:creep.name, Spawn:'Creep.spawningCompleted'});
+    if( DEBUG && TRACE ) logEvent(['Spawn', 'Creep.spawningCompleted'], {behaviour:creep.data.creepType, creepName:creep.name});
     if(CENSUS_ANNOUNCEMENTS) global.logSystem(creep.pos.roomName, dye(CRAYON.birth, 'Off to work ' + creep.name + '!') );
 };
 mod.execute = function(){
