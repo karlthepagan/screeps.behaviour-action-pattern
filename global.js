@@ -99,7 +99,12 @@ mod.FLAG_COLOR = {
     defense: { // point to gather troops
         color: COLOR_YELLOW,
         secondaryColor: COLOR_YELLOW,
-        filter: {'color': COLOR_YELLOW, 'secondaryColor': COLOR_YELLOW }
+        filter: {'color': COLOR_YELLOW, 'secondaryColor': COLOR_YELLOW },
+        patrol: {
+            color: COLOR_YELLOW,
+            secondaryColor: COLOR_PURPLE,
+            filter: {'color': COLOR_YELLOW, 'secondaryColor': COLOR_PURPLE },
+        },
     },
     //COLOR_ORANGE
     destroy: { // destroy whats standing here
