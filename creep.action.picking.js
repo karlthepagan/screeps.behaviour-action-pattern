@@ -6,7 +6,7 @@ action.isValidAction = function(creep){
     return ( creep.sum < creep.carryCapacity );
 };
 action.isValidTarget = function(target){
-    return (target != null && target.amount != null && target.amount > 0 && FlagDir.find);
+    return (target != null && target.amount != null && target.amount > 0); // && !FlagDir.findHere(FLAG_COLOR.command.drop, target.pos));
 };
 action.isAddableAction = function(creep){
     if( creep.data.creepType.indexOf('remote') > 0 ) return true;
