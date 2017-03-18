@@ -7,7 +7,7 @@ action.isActiveLair = function(target) {
     return !(target.ticksToSpawn > action.lairDangerTime); // non-lair => true
 };
 action.isValidAction = function(creep){
-    return creep.data.destiny && creep.data.destiny.room === creep.room.name &&
+    return _.get(creep,['data','destiny','room'],creep.room.name) === creep.room.name &&
         (Room.isSKRoom(creep.room.name) || creep.room.situation.invasion);
 };
 action.isAddableAction = function(creep) {
@@ -56,21 +56,11 @@ action.newTarget = function(creep) {
 };
 action.work = function(creep) {
     if (!(creep.data.safeSpot && creep.data.safeSpot.roomName)) {
-        const flag = creep.data.destiny && Game.flags[creep.data.destiny.targetName];
-        if (flag) {
-            creep.data.safeSpot = flag.pos;
-        } else {
-            // find the route home, move toward the exit until out of danger
-            const exit = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
-            if (exit) {
-                creep.data.safeSpot = creep.pos.findClosestByRange(exit);
-                creep.data.safeSpot.roomName = creep.pos.roomName;
-            }
-        }
+        creep.data.safeSpot = creep.getStrategyHandler([action.name], 'findSafeSpot', creep);
     }
 
     if (creep.data.safeSpot) {
-        if (creep.pos.getRangeTo(creep.target) < 10) {
+        if (creep.pos.getRangeTo(creep.target) < creep.getStrategyHandler([action.name], 'minRange', creep)) {
             creep.travelTo(creep.data.safeSpot);
         } else {
             creep.idleMove();
@@ -90,4 +80,19 @@ action.run = function(creep) {
 action.onAssignment = function(creep, target) {
     delete creep.data.safeSpot;
     if( SAY_ASSIGNMENT ) creep.say(String.fromCharCode(10532), SAY_PUBLIC);
+};
+action.defaultStrategy.minRange = function(creep) {
+    return 10;
+};
+action.defaultStrategy.findSafeSpot = function(creep) {
+    const flag = creep.data.destiny && Game.flags[creep.data.destiny.targetName];
+    if (flag) {
+        return flag.pos;
+    } else {
+        // find the route home, move toward the exit until out of danger
+        const exit = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
+        if (exit) {
+            return _.merge({roomName: creep.pos.roomName}, creep.pos.findClosestByRange(exit));
+        }
+    }
 };
