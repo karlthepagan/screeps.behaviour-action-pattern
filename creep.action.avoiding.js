@@ -60,9 +60,15 @@ action.work = function(creep) {
     }
 
     if (creep.data.safeSpot) {
-        if (creep.pos.getRangeTo(creep.target) < creep.getStrategyHandler([action.name], 'minRange', creep)) {
+        const range = creep.pos.getRangeTo(creep.target);
+        if ( range < creep.getStrategyHandler([action.name], 'minRange', creep)) {
+            console.log('avoid flee');
+            creep.fleeMove();
+        } else if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
+            console.log('avoid to spot');
             creep.travelTo(creep.data.safeSpot);
         } else {
+            console.log('avoid idle');
             creep.idleMove();
         }
     }
@@ -81,8 +87,11 @@ action.onAssignment = function(creep, target) {
     delete creep.data.safeSpot;
     if( SAY_ASSIGNMENT ) creep.say(String.fromCharCode(10532), SAY_PUBLIC);
 };
-action.defaultStrategy.minRange = function(creep) {
+action.defaultStrategy.maxRange = function(creep) {
     return 10;
+};
+action.defaultStrategy.minRange = function(creep) {
+    return 5;
 };
 action.defaultStrategy.findSafeSpot = function(creep) {
     const flag = creep.data.destiny && Game.flags[creep.data.destiny.targetName];

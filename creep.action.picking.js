@@ -6,7 +6,7 @@ action.isValidAction = function(creep){
     return ( creep.sum < creep.carryCapacity );
 };
 action.isValidTarget = function(target){
-    return (target != null && target.amount != null && target.amount > 0);
+    return (target != null && target.amount != null && target.amount > 0 && FlagDir.find);
 };
 action.isAddableAction = function(creep){
     if( creep.data.creepType.indexOf('remote') > 0 ) return true;
@@ -17,7 +17,7 @@ action.isAddableTarget = function(target, creep){
     if( creep.data.creepType.indexOf('remote') > 0 ) max = Infinity;
     else max =  this.maxPerTarget;
     let pickers = target.targetOf ? _.filter(target.targetOf, {actionName: 'picking'}) : [];
-    return (!target.targetOf || !pickers.length || ((pickers.length < max) && target.amount > _.sum( pickers.map( t => t.carryCapacityLeft))));
+    return target.amount > 10 && pickers.length < max && target.amount > (_.sum( pickers.map( t => t.carryCapacityLeft)) - creep.pos.getRangeTo(target));
 };
 action.newTarget = function(creep){
     let target;

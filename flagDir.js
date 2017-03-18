@@ -4,23 +4,7 @@ mod.findName = function(flagColor, pos, local, mod, modArgs){
     let that = this;
     if( flagColor == null || this.list.length == 0)
         return null;
-    let filter;
-    if (typeof flagColor === 'function' ) {
-        filter = function(flagEntry) {
-            if ( flagColor(flagEntry) && flagEntry.cloaking == 0 ) {
-                if ( !local ) return true;
-                if ( pos && pos.roomName && flagEntry.roomName == pos.roomName ) return true;
-            }
-            return false;
-        }
-    }
-    else {
-        filter = _.clone(flagColor.filter);
-        if( local && pos && pos.roomName )
-            _.assign(filter, {roomName: pos.roomName, cloaking: "0"});
-        else
-            _.assign(filter, {cloaking: "0"});
-    }
+    let filter = this.flagFilter(flagColor, pos, local);
     let flags = _.filter(that.list, filter);
 
     if( flags.length == 0 )
@@ -51,6 +35,32 @@ mod.find = function(flagColor, pos, local, mod, modArgs){
     if( id === null )
         return null;
     return Game.flags[id];
+};
+mod.flagFilter = function(flagColor, pos, local) {
+    let filter;
+    if (typeof flagColor === 'function' ) {
+        filter = function(flagEntry) {
+            if ( flagColor(flagEntry) && flagEntry.cloaking == 0 ) {
+                if ( !local ) return true;
+                if ( pos && pos.roomName && flagEntry.roomName == pos.roomName ) return true;
+            }
+            return false;
+        }
+    }
+    else {
+        filter = _.clone(flagColor.filter);
+        if( local && pos && pos.roomName )
+            _.assign(filter, {roomName: pos.roomName, cloaking: "0"});
+        else
+            _.assign(filter, {cloaking: "0"});
+    }
+    return filter;
+};
+mod.findHere = function(flagColor, pos) {
+    const room = Game.rooms[pos.roomName];
+    if (room) {
+        return _.first(room.lookForAt(LOOK_FLAGS, {filter: mod.flagFilter(flagColor)}));
+    }
 };
 mod.removeFromDir = function(name){
     let index = this.list.indexOf(f => f.name === name );
