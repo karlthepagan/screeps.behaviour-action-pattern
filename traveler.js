@@ -361,7 +361,7 @@ module.exports = function(globalOpts = {}){
             if(global.traveler && global.travelerTick !== Game.time){
                 global.traveler = new Traveler();
             }
-            options = this.getStrategyHandler([], 'moveOptions', options);
+            options = this.getStrategyHandler([], 'moveOptions', options, this);
             if (_.isUndefined(options.useFindRoute)) options.useFindRoute = global.ROUTE_PRECALCULATION;
             if (_.isUndefined(options.routeCallback)) options.routeCallback = Room.routeCallback(this.pos.roomName, destination.roomName, options);
             if (_.isUndefined(options.getCreepMatrix)) options.getCreepMatrix = room => room.creepMatrix;

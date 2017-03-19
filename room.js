@@ -4,6 +4,8 @@ let find = Room.prototype.find;
 let mod = {};
 module.exports = mod;
 
+const DiamondIterator = load("util.diamond.iterator");
+
 mod.extend = function(){
     let Container = function(room){
         this.room = room;
@@ -2245,6 +2247,40 @@ mod.extend = function(){
             });
         }
         this.memory.observer.rooms = ROOMS;
+    };
+    Room.avoidMatrix = function(roomName, creep, goal) {
+        const room = Game.rooms[roomName];
+        if (room) {
+            const matrix = room.structureMatrix.clone();
+            // TODO multiple goals, remove goals closer to the enemy than to us?
+            const hostiles = room.hostiles;
+            for (let i = hostiles.length - 1; i >= 0; i--) {
+                const pos = hostiles[i].pos;
+                const dst1 = creep.pos.getRangeTo(pos);
+                const dst2 = pos.getRangeTo(goal);
+                // diamond iterate dst1 apply cost 3
+                for (let xy of DiamondIterator.loop(pos, dst1)) {
+                    if (xy.x < 0 || xy.x > 49) continue;
+                    if (xy.y < 0 || xy.y > 49) continue;
+                    if (matrix.get(xy.x, xy.y) < 3 && Game.map.getTerrainAt(xy.x, xy.y, roomName) === 'plain') {
+                        matrix.set(xy.x, xy.y, 3);
+                    }
+                }
+                // TODO square dst2 cost 4
+                // diamond dst2 cost 10
+                for (let xy of DiamondIterator.loop(pos, dst2)) {
+                    if (xy.x < 0 || xy.x > 49) continue;
+                    if (xy.y < 0 || xy.y > 49) continue;
+                    if (matrix.get(xy.x, xy.y) < 4 && Game.map.getTerrainAt(xy.x, xy.y, roomName) === 'plain') {
+                        matrix.set(xy.x, xy.y, 4);
+                    }
+                }
+            }
+            return matrix;
+        } else {
+            // TODO extract structure cache
+            // PathFinder.CostMatrix.deserialize(Memory.pathfinder[this.name].costMatrix);
+        }
     };
 };
 mod.flush = function(){
