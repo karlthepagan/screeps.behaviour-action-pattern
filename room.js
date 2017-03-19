@@ -2204,7 +2204,7 @@ mod.extend = function(){
         this.memory.observer.lastLookedIndex = lastLookedIndex;
         Memory.observerSchedule.push(nextRoom);
         const r = OBSERVER.observeRoom(nextRoom); // now we get to observe a room
-        if (r === ERR_INVALID_ARGS) { // room has not yet been created / off the map
+        if (r === ERR_INVALID_ARGS && i < ROOMS.length) { // room has not yet been created / off the map (backup)
             Memory.observerSchedule.splice(Memory.observerSchedule.indexOf(nextRoom), 1); // remove invalid room from list
             this.controlObserver(); // should look at the next room (latest call will override previous calls on the same tick)
         }
@@ -2233,6 +2233,7 @@ mod.extend = function(){
                 }
                 vert += n;
                 const room = hor + vert;
+                if (!Game.map.isRoomAvailable(room)) continue; // not an available room
                 if (room in Game.rooms && Game.rooms[room].my) continue; // don't bother adding the room to the array if it's owned by us
                 if (OBSERVER_OBSERVE_HIGHWAYS_ONLY && !Room.isHighwayRoom(room)) continue; // we only want highway rooms
                 ROOMS.push(room);
@@ -2400,7 +2401,7 @@ mod.isMine = function(roomName) {
 };
 
 mod.calcCardinalDirection = function(roomName) {
-    const parsed = /^([WE])[0-9]{1,2}([NS])[0-9]{1,2}$/.exec(roomName);
+    const parsed = /^([WE])[0-9]+([NS])[0-9]+$/.exec(roomName);
     return [parsed[1], parsed[2]];
 };
 mod.calcGlobalCoordinates = function(roomName, callBack) {
