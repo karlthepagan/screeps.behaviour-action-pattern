@@ -311,26 +311,46 @@ mod.getCombatStats = function(body) {
         coreHits // if (hits < coreHits) missing moves!
     };
 };
-mod.findCircular = function() {
+mod.findCircular = function(extraCheck) {
+    const cpu = Game.cpu.getUsed();
     const groups = {
         creeps: Game.creeps,
         structures: Game.structures,
-        memory: Memory
     };
 
-    const map = {};
+    const stats = {
+        seenMap: {},
+    };
 
     for (let gid in groups) {
         const group = groups[gid];
         for (let id in group) {
             const entity = group[id];
             const path = gid + '.' + id;
-            map[id] = path;
-            this.checkCircular(id, map, entity, path, 1);
+            if (extraCheck) {
+                stats.seenList = [];
+                stats.seenPaths = [];
+            }
+            stats.seenMap[id] = path;
+            stats.stopEntity = entity;
+            stats.stopId = id;
+            this.checkCircular(stats, entity, path, 1);
         }
     }
+
+    stats.seenList = [];
+    stats.seenPaths = [];
+    for (let id in Memory) {
+        const entity = Memory[id];
+        const path = 'Memory.' + id;
+        stats.rootId = id;
+        stats.stopEntity = entity;
+        stats.stopId = id;
+        this.checkCircular(stats, entity, path, 1);
+    }
+    // console.log('findCurcular cost', Game.cpu.getUsed() - cpu);
 };
-mod.checkCircular = function(stopId, map, root, rootPath, depth) {
+mod.checkCircular = function(stats, root, rootPath, depth) {
     if (depth > 10) {
         logError('Checking for circulars, very deep path', {rootPath, depth});
         return;
@@ -340,13 +360,26 @@ mod.checkCircular = function(stopId, map, root, rootPath, depth) {
         const entity = root[key];
         if (!_.isObject(entity)) continue;
         const id = entity.id || entity.name;
-        if (id === stopId) {
-            throw new Error('circular structure:' + id + ' at:' + path + ' and at:' + map[id]);
+        if (id === stats.stopId) {
+            throw new Error('circular structure:' + id + ' at:' + path + ' and at:' + stats.rootId);
+        } else if(stats.stopEntity === entity) {
+            throw new Error('circular entity found at:' + path + ' and at:' + stats.rootId);
         }
-        if (!id || map[id]) {
-            continue;
+        if (stats.seenMap) {
+            if (!id || stats.seenMap[id]) {
+                continue;
+            }
+            stats.seenMap[id] = path;
         }
-        map[id] = path;
-        mod.checkCircular(stopId, map, entity, path, depth + 1);
+        if(stats.seenList) {
+            const seenIndex = stats.seenList.indexOf(entity);
+            if (seenIndex !== -1) {
+                throw new Error('circular entity found in list at:' + path + ' and at:' + stats.seenPaths[seenIndex]);
+            }
+        }        if (stats.seenList) {
+            stats.seenList.push(entity);
+            stats.seenPaths.push(path);
+        }
+        mod.checkCircular(stats, entity, path, depth + 1);
     }
 };
