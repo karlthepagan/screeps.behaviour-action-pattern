@@ -2255,6 +2255,9 @@ mod.extend = function(){
             // TODO multiple goals, remove goals closer to the enemy than to us?
             const hostiles = room.hostiles;
             for (let i = hostiles.length - 1; i >= 0; i--) {
+                if (Game.cpu.getUsed() > 400) {
+                    throw new Error("EXHAUSTED CPU");
+                }
                 const pos = hostiles[i].pos;
                 const dst1 = creep.pos.getRangeTo(pos);
                 const dst2 = pos.getRangeTo(goal);
@@ -2267,7 +2270,7 @@ mod.extend = function(){
                     }
                 }
                 // TODO square dst2 cost 4
-                // diamond dst2 cost 10
+                // diamond dst2 cost 4
                 for (let xy of DiamondIterator.loop(pos, dst2)) {
                     if (xy.x < 0 || xy.x > 49) continue;
                     if (xy.y < 0 || xy.y > 49) continue;
@@ -2280,6 +2283,7 @@ mod.extend = function(){
         } else {
             // TODO extract structure cache
             // PathFinder.CostMatrix.deserialize(Memory.pathfinder[this.name].costMatrix);
+            console.log('no vision');
         }
     };
 };

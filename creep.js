@@ -2,6 +2,9 @@ const strategy = load("strategy");
 
 let mod = {};
 module.exports = mod;
+
+const creepTargets = {};
+
 mod.extend = function(){
     Creep.prototype.findGroupMemberByType = function(creepType, flagName) {
         let creep;
@@ -158,13 +161,13 @@ mod.extend = function(){
                     flee: true,
                     plainCost: 2,
                     swampCost: 10,
-                    maxOps: 500,
+                    maxOps: 100,
                     maxRooms: 2,
 
                     roomCallback: function(roomName) {
                         let room = Game.rooms[roomName];
                         if (!room) return;
-                        return room.creepMatrix;
+                        return room.structureMatrix;
                     }
                 }
             );
@@ -312,7 +315,28 @@ mod.extend = function(){
                     delete Memory.debugTrace.creepName;
                 }
             }
-        }
+        },
+        // 'target': {
+        //     configurable: true,
+        //     get: function() {
+        //         if (Game.cpu.getUsed() > 400) {
+        //             throw new Error("EXHAUSTED CPU");
+        //         }
+        //         // if (this._target && this._target._target === this) {
+        //         //     console.log("CYCLE DETECTED ABORT ABORT", this.name, this.pos);
+        //         //     delete this._target;
+        //         // }
+        //         // const id = this.data.targetId;
+        //         // return id && Game.getObjectById(id) || Game.spawns[id] || Game.flags[id] || null;
+        //         return this._target;
+        //     },
+        //     set: function(value) {
+        //         if (value === this) {
+        //             throw new Error("creep attempted to self-target");
+        //         }
+        //         this._target = value;
+        //     },
+        // },
     });
 
     // errorData = {errorCode, action, target, ...}
