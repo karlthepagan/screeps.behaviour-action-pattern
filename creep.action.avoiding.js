@@ -97,18 +97,33 @@ action.defaultStrategy.maxRange = function(creep) {
 action.defaultStrategy.minRange = function(creep) {
     return 5;
 };
+action.currentEntrance = function(creep) {
+    const exit = _.get(creep.memory, ['_travel','roomIn',creep.pos.roomName,0]);
+    if (exit) {
+        return _.merge({roomName: creep.pos.roomName, exit});
+    }
+    return false;
+};
+action.currentExit = function(creep) {
+    const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
+    if (exit) {
+        return _.merge({roomName: creep.pos.roomName, exit});
+    }
+    return false;
+};
+action.homeExit = function(creep) {
+    // find the route home, move toward the exit until out of danger
+    const home = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
+    if (home) {
+        return _.merge({roomName: creep.pos.roomName}, creep.pos.findClosestByRange(home));
+    }
+    return false;
+};
 action.defaultStrategy.findSafeSpot = function(creep) {
     const flag = creep.data.destiny && Game.flags[creep.data.destiny.targetName];
-    const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
     if (flag) {
         return flag.pos;
-    } else if (exit) {
-        return _.merge({roomName: creep.pos.roomName, exit});
-    } else {
-        // find the route home, move toward the exit until out of danger
-        const home = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
-        if (home) {
-            return _.merge({roomName: creep.pos.roomName}, creep.pos.findClosestByRange(home));
-        }
     }
+
+    return action.currentExit(creep) || action.homeExit(creep) || false;
 };

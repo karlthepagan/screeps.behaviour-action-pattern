@@ -408,7 +408,7 @@ mod.extend = function(){
                         const room = this.room;
                         this._piles = room.find(FIND_FLAGS, {filter: FLAG_COLOR.command.drop.filter})
                             .map(function(flag) {
-                                const piles = room.lookForAt(LOOK_ENERGY, flag.pos.x, flag.pos.y);
+                                const piles = _.filter(room.lookForAt(LOOK_ENERGY, flag.pos.x, flag.pos.y), i=>i.amount > 50);
                                 return piles.length && piles[0] || flag;
                             });
                     }
@@ -2703,18 +2703,22 @@ mod.extend = function(){
             // TODO multiple goals, remove goals closer to the enemy than to us?
             const hostiles = room.hostiles;
             for (let i = hostiles.length - 1; i >= 0; i--) {
-                console.log('hostile', hostiles[i].pos);
+                const pos = hostiles[i].pos;
+                console.log('hostile', pos);
                 if (Game.cpu.getUsed() > 400) {
                     throw new Error("EXHAUSTED CPU");
                 }
-                const pos = hostiles[i].pos;
                 const dst1 = creep.pos.getRangeTo(pos);
                 const dst2 = pos.getRangeTo(goal);
                 // diamond iterate dst1 apply cost 3
+                console.log('diamond',pos,dst1);
                 for (let xy of DiamondIterator.loop(pos, dst1)) {
                     if (xy.x < 0 || xy.x > 49) continue;
                     if (xy.y < 0 || xy.y > 49) continue;
-                    if (matrix.get(xy.x, xy.y) < 3 && Game.map.getTerrainAt(xy.x, xy.y, roomName) === 'plain') {
+                    if (Game.cpu.getUsed() > 400) {
+                        throw new Error("EXHAUSTED CPU");
+                    }
+                    if (matrix.get(xy.x, xy.y) < 3 && room.lookForAt(LOOK_TERRAIN, xy)[0] === 'plain') {
                         matrix.set(xy.x, xy.y, 3);
                     }
                 }
@@ -2724,7 +2728,7 @@ mod.extend = function(){
                     for (let xy of DiamondIterator.loop(pos, dst2)) {
                         if (xy.x < 0 || xy.x > 49) continue;
                         if (xy.y < 0 || xy.y > 49) continue;
-                        if (matrix.get(xy.x, xy.y) < 4 && Game.map.getTerrainAt(xy.x, xy.y, roomName) === 'plain') {
+                        if (matrix.get(xy.x, xy.y) < 4 && room.lookForAt(LOOK_TERRAIN, xy)[0] === 'plain') {
                             matrix.set(xy.x, xy.y, 4);
                         }
                     }

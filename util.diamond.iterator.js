@@ -34,7 +34,8 @@ class DiamondIterator {
     next() {
         if (this._dir > TOP_LEFT) {
             return {
-                done: true
+                done: true,
+                value: false,
             }
         }
 

@@ -78,3 +78,18 @@ action.work = function(creep){
 action.onAssignment = function(creep, target) {
     if( SAY_ASSIGNMENT ) creep.say(String.fromCharCode(8681), SAY_PUBLIC);
 };
+action.debounce = function(creep, outflowActions, callback, thisArg) {
+    let shouldCall = false;
+    if (creep.data.lastAction === 'dropping') {
+        // cycle detected
+        shouldCall = _.some(outflowActions, a => a.newTarget(creep));
+    } else {
+        shouldCall = true;
+    }
+
+    if (shouldCall) {
+        return _.invoke([thisArg], callback, this)[0];
+    }
+
+    return undefined;
+};
