@@ -24,3 +24,18 @@ action.defaultStrategy.isValidAction = function(creep) {
         (!creep.room.conserveForDefense || creep.room.relativeEnergyAvailable < 0.8)
     ) || false;
 };
+action.debounce = function(creep, outflowActions, callback, thisArg) {
+    let shouldCall = false;
+    if (creep.data.lastAction === 'storing' && creep.data.lastTarget === creep.room.storage.id) {
+        // cycle detected
+        shouldCall = _.some(outflowActions, a => a.newTarget(creep));
+    } else {
+        shouldCall = true;
+    }
+
+    if (shouldCall) {
+        return _.invoke([thisArg], callback, this)[0];
+    }
+
+    return undefined;
+};
