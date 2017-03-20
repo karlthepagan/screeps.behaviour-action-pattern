@@ -134,8 +134,8 @@ module.exports = function(globalOpts = {}){
                 return matrix;
             };
             const ret = PathFinder.search(origPos, { pos: destPos, range: options.range }, {
-                swampCost: options.ignoreRoads ? 5 : 10,
-                plainCost: options.ignoreRoads ? 1 : 2,
+                swampCost: options.ignoreSpeed ? 1 : (options.ignoreRoads ? 5 : 10),
+                plainCost: options.ignoreRoads || options.ignoreSpeed ? 1 : 2,
                 maxOps: options.maxOps,
                 roomCallback: callback
             });
@@ -175,11 +175,8 @@ module.exports = function(globalOpts = {}){
             // check if creep is stuck
             let hasMoved = true;
             if (travelData.prev) {
-                const isBorder = (pos) => {
-                    return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
-                };
                 const opposingBorders = (p1, p2) => {
-                    return isBorder(p1) && isBorder(p2) && p1.roomName !== p2.roomName && (p1.x === p2.x || p1.y === p2.y);
+                    return Traveler.isBorder(p1) && Traveler.isBorder(p2) && p1.roomName !== p2.roomName && (p1.x === p2.x || p1.y === p2.y);
                 };
                 travelData.prev = new RoomPosition(travelData.prev.x, travelData.prev.y, travelData.prev.roomName);
                 if (creepPos.inRangeTo(travelData.prev, 0) ||
@@ -251,7 +248,7 @@ module.exports = function(globalOpts = {}){
                         console.log(`attempting path without findRoute was ${ret.incomplete ? "not" : ""} successful`);
                     }
                 }
-                travelData.path = Traveler.serializePath(creep.pos, ret.path);
+                _.merge(travelData, Traveler.serializeRoute(creep.pos, ret.path, ret.route));
                 travelData.stuck = 0;
             }
             if (!travelData.path || travelData.path.length === 0) {
@@ -341,6 +338,31 @@ module.exports = function(globalOpts = {}){
             let offsetX = [0, 0, 1, 1, 1, 0, -1, -1, -1];
             let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
             return new RoomPosition(origin.x + offsetX[direction], origin.y + offsetY[direction], origin.roomName);
+        }
+        static serializeRoute(startPos, path, route) {
+            const result = {
+                path: "",
+            };
+            let lastPosition = startPos;
+            const pushExit = function(set, pos) {
+                set[pos.roomName] = _(set[pos.roomName]).flatten().concat(
+                    _.padLeft(pos.x, 2, '0') + _.padLeft(pos.y, 2, '0')
+                );
+                return set;
+            };
+            for (let position of path) {
+                if (position.roomName === lastPosition.roomName) {
+                    result.path += lastPosition.getDirectionTo(position);
+                } else {
+                    result.roomOut = pushExit(result.roomOut || {}, lastPosition);
+                    result.roomIn = pushExit(result.roomIn || {}, position);
+                }
+                lastPosition = position;
+            }
+            return result;
+        }
+        static isBorder(pos) {
+            return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
         }
     }
 

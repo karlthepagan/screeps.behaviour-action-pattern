@@ -63,7 +63,11 @@ action.work = function(creep) {
         const range = creep.pos.getRangeTo(creep.target);
         if ( range < creep.getStrategyHandler([action.name], 'minRange', creep)) {
             console.log('avoid flee');
-            creep.fleeMove();
+            if (creep.room.isBorder(creep.pos)) {
+                // TODO free from creep in other room?
+            } else {
+                creep.fleeMove();
+            }
         } else if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
             console.log('avoid to spot');
             creep.travelTo(creep.data.safeSpot);
@@ -95,13 +99,16 @@ action.defaultStrategy.minRange = function(creep) {
 };
 action.defaultStrategy.findSafeSpot = function(creep) {
     const flag = creep.data.destiny && Game.flags[creep.data.destiny.targetName];
+    const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
     if (flag) {
         return flag.pos;
+    } else if (exit) {
+        return _.merge({roomName: creep.pos.roomName, exit});
     } else {
         // find the route home, move toward the exit until out of danger
-        const exit = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
-        if (exit) {
-            return _.merge({roomName: creep.pos.roomName}, creep.pos.findClosestByRange(exit));
+        const home = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
+        if (home) {
+            return _.merge({roomName: creep.pos.roomName}, creep.pos.findClosestByRange(home));
         }
     }
 };

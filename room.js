@@ -2248,6 +2248,9 @@ mod.extend = function(){
         }
         this.memory.observer.rooms = ROOMS;
     };
+    Room.prototype.isBorder = function(pos) {
+        return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
+    };
     Room.avoidMatrix = function(roomName, creep, goal) {
         const room = Game.rooms[roomName];
         if (room) {
@@ -2255,6 +2258,7 @@ mod.extend = function(){
             // TODO multiple goals, remove goals closer to the enemy than to us?
             const hostiles = room.hostiles;
             for (let i = hostiles.length - 1; i >= 0; i--) {
+                console.log('hostile', hostiles[i].pos);
                 if (Game.cpu.getUsed() > 400) {
                     throw new Error("EXHAUSTED CPU");
                 }
