@@ -62,16 +62,17 @@ action.work = function(creep) {
     if (creep.data.safeSpot) {
         const range = creep.pos.getRangeTo(creep.target);
         if ( range < creep.getStrategyHandler([action.name], 'minRange', creep)) {
-            console.log('avoid flee');
             if (creep.room.isBorder(creep.pos)) {
                 // TODO free from creep in other room?
             } else {
                 creep.fleeMove();
             }
         } else if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
+            if(creep.leaveBorder()) return;
             console.log('avoid to spot');
             creep.travelTo(creep.data.safeSpot);
         } else {
+            if(creep.leaveBorder()) return;
             console.log('avoid idle');
             creep.idleMove();
         }

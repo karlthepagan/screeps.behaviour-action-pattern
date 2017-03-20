@@ -156,13 +156,12 @@ mod.extend = function(){
                 return { pos: o.pos, range: 5 };
             });
 
-            console.log('flee calc');
             let ret = PathFinder.search(
                 this.pos, goals, {
                     flee: true,
                     plainCost: 2,
                     swampCost: 10,
-                    maxOps: 100,
+                    maxOps: 500,
                     maxRooms: 2,
 
                     roomCallback: function(roomName) {
@@ -317,27 +316,27 @@ mod.extend = function(){
                 }
             }
         },
-        'target': {
-            configurable: true,
-            get: function() {
-                if (Game.cpu.getUsed() > 400) {
-                    throw new Error("EXHAUSTED CPU");
-                }
-                // if (this._target && this._target._target === this) {
-                //     console.log("CYCLE DETECTED ABORT ABORT", this.name, this.pos);
-                //     delete this._target;
-                // }
-                // const id = this.data.targetId;
-                // return id && Game.getObjectById(id) || Game.spawns[id] || Game.flags[id] || null;
-                return this._target;
-            },
-            set: function(value) {
-                if (value === this) {
-                    throw new Error("creep attempted to self-target");
-                }
-                this._target = value;
-            },
-        },
+        // 'target': {
+        //     configurable: true,
+        //     get: function() {
+        //         if (Game.cpu.getUsed() > Game.cpu.tickLimit - 50) {
+        //             throw new Error("EXHAUSTED CPU");
+        //         }
+        //         // if (this._target && this._target._target === this) {
+        //         //     console.log("CYCLE DETECTED ABORT ABORT", this.name, this.pos);
+        //         //     delete this._target;
+        //         // }
+        //         // const id = this.data.targetId;
+        //         // return id && Game.getObjectById(id) || Game.spawns[id] || Game.flags[id] || null;
+        //         return this._target;
+        //     },
+        //     set: function(value) {
+        //         if (value === this) {
+        //             throw new Error("creep attempted to self-target");
+        //         }
+        //         this._target = value;
+        //     },
+        // },
     });
 
     // errorData = {errorCode, action, target, ...}

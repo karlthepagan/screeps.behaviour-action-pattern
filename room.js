@@ -2697,7 +2697,9 @@ mod.extend = function(){
         return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
     };
     Room.avoidMatrix = function(roomName, creep, goal) {
+        const limit = Game.cpu.tickLimit - 50;
         const room = Game.rooms[roomName];
+        const creepPos = creep.pos;
         if (room) {
             const matrix = room.structureMatrix.clone();
             // TODO multiple goals, remove goals closer to the enemy than to us?
@@ -2705,18 +2707,22 @@ mod.extend = function(){
             for (let i = hostiles.length - 1; i >= 0; i--) {
                 const pos = hostiles[i].pos;
                 console.log('hostile', pos);
-                if (Game.cpu.getUsed() > 400) {
-                    throw new Error("EXHAUSTED CPU");
+                if (Game.cpu.getUsed() > limit) {
+                    console.log('derp', limit);
+                    throw new Error("EXHAUSTED CPU " + limit);
                 }
-                const dst1 = creep.pos.getRangeTo(pos);
-                const dst2 = pos.getRangeTo(goal);
+                const dst1 = creepPos.getRangeTo(pos) - 1;
+                const dst2 = pos.getRangeTo(goal) - 1;
                 // diamond iterate dst1 apply cost 3
-                console.log('diamond',pos,dst1);
+                if (!_.isFinite(dst1)) continue;
+
+                console.log('diamond', pos, dst1);
                 for (let xy of DiamondIterator.loop(pos, dst1)) {
-                    if (xy.x < 0 || xy.x > 49) continue;
-                    if (xy.y < 0 || xy.y > 49) continue;
-                    if (Game.cpu.getUsed() > 400) {
-                        throw new Error("EXHAUSTED CPU");
+                    if (xy.x < 1 || xy.x > 48) continue;
+                    if (xy.y < 1 || xy.y > 48) continue;
+                    if (Game.cpu.getUsed() > limit) {
+                        console.log('derp', limit);
+                        throw new Error("EXHAUSTED CPU " + limit);
                     }
                     if (matrix.get(xy.x, xy.y) < 3 && room.lookForAt(LOOK_TERRAIN, xy)[0] === 'plain') {
                         matrix.set(xy.x, xy.y, 3);
@@ -2724,10 +2730,10 @@ mod.extend = function(){
                 }
                 // TODO square dst2 cost 4
                 // diamond dst2 cost 4
-                if (!DiamondIterator.inside(creep.pos, pos, dst2)) {
+                if (!DiamondIterator.inside(creepPos, pos, dst2)) {
                     for (let xy of DiamondIterator.loop(pos, dst2)) {
-                        if (xy.x < 0 || xy.x > 49) continue;
-                        if (xy.y < 0 || xy.y > 49) continue;
+                        if (xy.x < 1 || xy.x > 48) continue;
+                        if (xy.y < 1 || xy.y > 48) continue;
                         if (matrix.get(xy.x, xy.y) < 4 && room.lookForAt(LOOK_TERRAIN, xy)[0] === 'plain') {
                             matrix.set(xy.x, xy.y, 4);
                         }
