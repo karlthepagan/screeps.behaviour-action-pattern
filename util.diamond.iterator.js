@@ -19,6 +19,10 @@ class DiamondIterator {
         }
     }
 
+    static inside(pos, xy, radius) {
+        return Math.abs(xy.x - pos.x) + Math.abs(xy.y - pos.y) < radius;
+    }
+
     constructor(xy, radius) {
         this._radius = radius;
         this.x = xy.x;

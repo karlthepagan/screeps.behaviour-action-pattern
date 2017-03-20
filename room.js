@@ -2271,11 +2271,13 @@ mod.extend = function(){
                 }
                 // TODO square dst2 cost 4
                 // diamond dst2 cost 4
-                for (let xy of DiamondIterator.loop(pos, dst2)) {
-                    if (xy.x < 0 || xy.x > 49) continue;
-                    if (xy.y < 0 || xy.y > 49) continue;
-                    if (matrix.get(xy.x, xy.y) < 4 && Game.map.getTerrainAt(xy.x, xy.y, roomName) === 'plain') {
-                        matrix.set(xy.x, xy.y, 4);
+                if (!DiamondIterator.inside(creep.pos, pos, dst2)) {
+                    for (let xy of DiamondIterator.loop(pos, dst2)) {
+                        if (xy.x < 0 || xy.x > 49) continue;
+                        if (xy.y < 0 || xy.y > 49) continue;
+                        if (matrix.get(xy.x, xy.y) < 4 && Game.map.getTerrainAt(xy.x, xy.y, roomName) === 'plain') {
+                            matrix.set(xy.x, xy.y, 4);
+                        }
                     }
                 }
             }

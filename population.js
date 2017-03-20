@@ -334,7 +334,10 @@ mod.findCircular = function(extraCheck) {
             stats.seenMap[id] = path;
             stats.stopEntity = entity;
             stats.stopId = id;
-            this.checkCircular(stats, entity, path, 1);
+            stats.rootId = id;
+            if (entity && id) {
+                this.checkCircular(stats, entity, path, 1);
+            }
         }
     }
 
@@ -343,10 +346,12 @@ mod.findCircular = function(extraCheck) {
     for (let id in Memory) {
         const entity = Memory[id];
         const path = 'Memory.' + id;
-        stats.rootId = id;
         stats.stopEntity = entity;
         stats.stopId = id;
-        this.checkCircular(stats, entity, path, 1);
+        stats.rootId = id;
+        if (entity && id) {
+            this.checkCircular(stats, entity, path, 1);
+        }
     }
     // console.log('findCurcular cost', Game.cpu.getUsed() - cpu);
 };
