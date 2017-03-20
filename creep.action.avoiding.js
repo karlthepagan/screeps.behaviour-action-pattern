@@ -36,7 +36,6 @@ action.newTarget = function(creep) {
         const target = _.chain(creep.room.hostiles).filter(function(target) {
             return action.isValidTarget(target);
         }).map(function(target) {
-            // TODO react to players? getStrategyHandler
             let score = 0;
             const range = creep.pos.getRangeTo(target);
             if (creep.owner.username === "Invader") {
@@ -44,7 +43,7 @@ action.newTarget = function(creep) {
             } else if (range < 10) {
                 score = range - 11;
             } else {
-                score = 0;
+                score = range - 26;
             }
             return {target, score};
         }).filter('score').sortBy('score').first().get('target').value();
@@ -68,6 +67,7 @@ action.work = function(creep) {
                 creep.fleeMove();
             }
         } else if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
+            if(creep.leaveBorder()) return;
             const result = creep.travelTo(creep.data.safeSpot);
             // if (result !== 0) {
             //     console.log(creep.name, result);
