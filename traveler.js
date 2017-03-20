@@ -248,7 +248,7 @@ module.exports = function(globalOpts = {}){
                         console.log(`attempting path without findRoute was ${ret.incomplete ? "not" : ""} successful`);
                     }
                 }
-                _.merge(travelData, Traveler.serializeRoute(creep.pos, ret.path, ret.route));
+                _.merge(travelData, Traveler.serializeRoute(creep.pos, ret.path, destPos, ret.route));
                 travelData.stuck = 0;
             }
             if (!travelData.path || travelData.path.length === 0) {
@@ -339,7 +339,7 @@ module.exports = function(globalOpts = {}){
             let offsetY = [0, -1, -1, 0, 1, 1, 1, 0, -1];
             return new RoomPosition(origin.x + offsetX[direction], origin.y + offsetY[direction], origin.roomName);
         }
-        static serializeRoute(startPos, path, route) {
+        static serializeRoute(startPos, path, dstPos, route) {
             const result = {
                 path: "",
             };
@@ -358,6 +358,12 @@ module.exports = function(globalOpts = {}){
                     result.roomIn = pushExit(result.roomIn || {}, position);
                 }
                 lastPosition = position;
+            }
+            if (!_.eq(lastPosition, dstPos)) {
+                const dir = lastPosition.getDirectionTo(dstPos);
+                if (dir) {
+                    result.path += dir;
+                }
             }
             return result;
         }

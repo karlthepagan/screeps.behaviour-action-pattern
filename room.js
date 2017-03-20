@@ -2697,7 +2697,6 @@ mod.extend = function(){
         return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
     };
     Room.avoidMatrix = function(roomName, creep, goal) {
-        const limit = Game.cpu.tickLimit - 50;
         const room = Game.rooms[roomName];
         const creepPos = creep.pos;
         if (room) {
@@ -2707,30 +2706,24 @@ mod.extend = function(){
             for (let i = hostiles.length - 1; i >= 0; i--) {
                 const pos = hostiles[i].pos;
                 console.log('hostile', pos);
-                if (Game.cpu.getUsed() > limit) {
-                    console.log('derp', limit);
-                    throw new Error("EXHAUSTED CPU " + limit);
-                }
-                const dst1 = creepPos.getRangeTo(pos) - 1;
-                const dst2 = pos.getRangeTo(goal) - 1;
+                const dst1 = creepPos.getRangeTo(pos.x, pos.y) - 1;
+                const dst2 = pos.getRangeTo(goal.x, goal.y) - 1;
                 // diamond iterate dst1 apply cost 3
                 if (!_.isFinite(dst1)) continue;
 
-                console.log('diamond', pos, dst1);
-                for (let xy of DiamondIterator.loop(pos, dst1)) {
+                console.log('diamond 1', pos, dst1);
+                const itr1 = new DiamondIterator(pos, dst1);
+                for (let xy = itr1.next(); xy.done === false; xy = itr1.next()) {
                     if (xy.x < 1 || xy.x > 48) continue;
                     if (xy.y < 1 || xy.y > 48) continue;
-                    if (Game.cpu.getUsed() > limit) {
-                        console.log('derp', limit);
-                        throw new Error("EXHAUSTED CPU " + limit);
-                    }
                     if (matrix.get(xy.x, xy.y) < 3 && room.lookForAt(LOOK_TERRAIN, xy)[0] === 'plain') {
                         matrix.set(xy.x, xy.y, 3);
                     }
                 }
                 // TODO square dst2 cost 4
                 // diamond dst2 cost 4
-                if (!DiamondIterator.inside(creepPos, pos, dst2)) {
+                console.log('diamond 2', goal, dst2);
+                if (dst2 && !DiamondIterator.inside(creepPos, pos, dst2)) {
                     for (let xy of DiamondIterator.loop(pos, dst2)) {
                         if (xy.x < 1 || xy.x > 48) continue;
                         if (xy.y < 1 || xy.y > 48) continue;

@@ -68,9 +68,10 @@ action.work = function(creep) {
                 creep.fleeMove();
             }
         } else if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
-            if(creep.leaveBorder()) return;
-            console.log('avoid to spot');
-            creep.travelTo(creep.data.safeSpot);
+            const result = creep.travelTo(creep.data.safeSpot);
+            // if (result !== 0) {
+            //     console.log(creep.name, result);
+            // }
         } else {
             if(creep.leaveBorder()) return;
             console.log('avoid idle');
@@ -101,14 +102,14 @@ action.defaultStrategy.minRange = function(creep) {
 action.currentEntrance = function(creep) {
     const exit = _.get(creep.memory, ['_travel','roomIn',creep.pos.roomName,0]);
     if (exit) {
-        return _.merge({roomName: creep.pos.roomName, exit});
+        return {roomName: creep.pos.roomName, x: +exit.substring(0,2), y: +exit.substring(2,4)};
     }
     return false;
 };
 action.currentExit = function(creep) {
     const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
     if (exit) {
-        return _.merge({roomName: creep.pos.roomName, exit});
+        return {roomName: creep.pos.roomName, x: +exit.substring(0,2), y: +exit.substring(2,4)};
     }
     return false;
 };
