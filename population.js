@@ -1,5 +1,7 @@
 let mod = {};
 module.exports = mod;
+const safeProperties = [["room","pos","id","_name","_spawning","_my","data","_ticksToLive","_carryCapacity","_sumSet","_carry","_sum","action","_body","_hits","_hitsMax","_owner","_fatigue","_saying","room","pos","id","_name","_spawning","_my","data","_ticksToLive","_carryCapacity","_sumSet","_carry","_sum","action","_body","_hits","_hitsMax","_owner","_fatigue","_saying"]]
+    .map(a => _.zipObject(a, _.times(a.length, _.constant(true))));
 mod.getCreep = function(creepName) {
     return Memory.population[creepName];
 };
@@ -271,6 +273,17 @@ mod.execute = function(){
 mod.cleanup = function(){
     let unregister = name => Population.unregisterCreep(name);
     this.died.forEach(unregister);
+    if (TRACE && DEBUG && Memory.debugTrace.Population === 'circular') {
+        for (let n in Game.creeps) {
+            const creep = Game.creeps[n];
+            trace('Population', {creepName:creep.name, Population:'circular', keys:Object.keys(creep), properties:Object.getOwnPropertyNames(creep), memory:Memory.population[n]});
+            if (Memory.debugTrace.creepName === creep.name) {
+                console.log('DELEEEEEEETE');
+                Object.keys(creep).forEach(k => delete creep[k]);
+                // delete Memory.population[n];
+            }
+        }
+    }
     // TODO consider clearing target here
 };
 mod.sortEntries = function() {

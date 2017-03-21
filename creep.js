@@ -316,25 +316,17 @@ mod.extend = function(){
                 }
             }
         },
-        'target': {
+        'target': { // assert creep.hasOwnProperty('target') === false
             configurable: true,
+            enumerable: false,
             get: function() {
-                if (Game.cpu.getUsed() > Game.cpu.tickLimit - 50) {
-                    throw new Error("EXHAUSTED CPU");
-                }
-                // if (this._target && this._target._target === this) {
-                //     console.log("CYCLE DETECTED ABORT ABORT", this.name, this.pos);
-                //     delete this._target;
-                // }
-                // const id = this.data.targetId;
-                // return id && Game.getObjectById(id) || Game.spawns[id] || Game.flags[id] || null;
-                return this._target;
+                return creepTargets[this.id];
             },
             set: function(value) {
                 if (value === this) {
                     throw new Error("creep attempted to self-target");
                 }
-                this._target = value;
+                creepTargets[this.id] = value;
             },
         },
     });
