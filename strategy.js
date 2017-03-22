@@ -61,7 +61,7 @@ mod.decorateAgent = function(prototype, ...definitions) {
     // Explain current activity
     prototype.explain = function() {
         const strategyKey = this.strategyKey([]);
-        let explained = `${this.name}: assigned (${strategyKey})`;
+        let explained = `${this.toString()}: assigned (${strategyKey})`;
         for (let i = 0; i < strategyKey.length; i++) {
             const client = this.selectClient(i);
             if (client && client.explain) {
