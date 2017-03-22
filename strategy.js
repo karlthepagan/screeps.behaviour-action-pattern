@@ -34,6 +34,9 @@ mod.decorateAgent = function(prototype, ...definitions) {
         }
         return key;
     };
+    prototype.selectClient = function(ids, index) {
+        return ids[index] && definitions[index].select(ids[index]);
+    };
     prototype.strategy = function(ids) {
         const key = this.strategyKey(ids);
 
