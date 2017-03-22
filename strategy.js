@@ -58,6 +58,20 @@ mod.decorateAgent = function(prototype, ...definitions) {
         mod.putCachedStrategy(this, key, strategy);
         return mod.customizeStrategy(this, key, strategy);
     };
+    // Explain current activity
+    prototype.explain = function() {
+        const strategyKey = this.strategyKey([]);
+        let explained = `${this.name}: assigned (${strategyKey})`;
+        for (let i = 0; i < strategyKey.length; i++) {
+            const client = this.selectClient(i);
+            if (client && client.explain) {
+                explained += `\n\t${strategyKey[i]}: ${client.explain(this)}`;
+            }
+        }
+
+        return explained;
+    };
+
 };
 
 // agent will prefer this strategy until it is free'd
