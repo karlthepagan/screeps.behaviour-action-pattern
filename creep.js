@@ -365,20 +365,6 @@ mod.extend = function(){
             selector: taskName => Task[taskName] && Task[taskName],
         });
 
-    // Explain current activity
-    Creep.prototype.explain = function() {
-        const strategyKey = this.strategyKey([]);
-        let explained = `${this.name}: assigned (${strategyKey})`;
-        for (let i = 0; i < strategyKey.length; i++) {
-            const client = this.selectClient(i);
-            if (client && client.explain) {
-                explained += `\n\t${strategyKey[i]}: ${client.explain(this)}`;
-            }
-        }
-
-        return explained;
-    };
-
     // API
     Creep.prototype.staticCustomStrategy = function(actionName, behaviourName, taskName) {};
     Creep.prototype.customStrategy = function(actionName, behaviourName, taskName) {};
