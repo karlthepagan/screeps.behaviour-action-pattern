@@ -59,6 +59,7 @@ mod.extend = function(){
                     return;
                 }
             }
+            let p = startProfiling('Creep.run');
             if (this.data && !_.contains(['remoteMiner', 'miner', 'upgrader'], this.data.creepType)) {
                 this.repairNearby();
             }
@@ -116,6 +117,7 @@ mod.extend = function(){
                 Creep.behaviour.ranger.heal(this);
                 if( SAY_ASSIGNMENT ) this.say(String.fromCharCode(10133), SAY_PUBLIC);
             }
+            p.checkCPU(this.name, 5, this.data ? this.data.creepType : 'noType');
         }
 
         strategy.freeStrategy(this);
@@ -362,6 +364,20 @@ mod.extend = function(){
             default: creep => creep.data.destiny && creep.data.destiny.task,
             selector: taskName => Task[taskName] && Task[taskName],
         });
+
+    // Explain current activity
+    Creep.prototype.explain = function() {
+        const strategyKey = this.strategyKey([]);
+        let explained = `${this.name}: assigned (${strategyKey})`;
+        for (let i = 0; i < strategyKey.length; i++) {
+            const client = this.selectClient(i);
+            if (client && client.explain) {
+                explained += `\n\t${strategyKey[i]}: ${client.explain(this)}`;
+            }
+        }
+
+        return explained;
+    };
 
     // API
     Creep.prototype.staticCustomStrategy = function(actionName, behaviourName, taskName) {};
