@@ -11,7 +11,10 @@ action.step = function(creep){
     if(CHATTY) creep.say(this.name, SAY_PUBLIC);
     let targetRange = creep.data.travelRange || this.targetRange;
     let target = creep.target;
-    if (FlagDir.isSpecialFlag(creep.target)) {
+    if (creep.data.travelPos) {
+        target = creep.data.travelPos;
+        targetRange = 0;
+    } else if (FlagDir.isSpecialFlag(creep.target)) {
         if (creep.data.travelRoom) {
             const room = Game.rooms[creep.data.travelRoom];
             if (room && (room.name === creep.pos.roomName)) { // TODO || room.getBorder(creep.pos.roomName))) {
@@ -31,7 +34,14 @@ action.step = function(creep){
         if( range <= targetRange ) {
             return action.unregister(creep);
         }
-        creep.travelTo(target, {range:targetRange, ignoreCreeps:creep.data.ignoreCreeps || true});
+        const result = creep.travelTo(target, {range:targetRange, ignoreCreeps:creep.data.ignoreCreeps || true});
+        if (result === 0 && targetRange === 1) {
+            if (creep.data.travelPos) {
+                delete creep.data.travelPos;
+            } else {
+                return action.unregister(creep);
+            }
+        }
     } else {
         action.unregister(creep);
     }

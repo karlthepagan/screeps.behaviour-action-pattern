@@ -33,17 +33,19 @@ action.newTarget = function(creep) {
     }
 
     if (creep.room.situation.invasion) {
+        const maxRange = creep.getStrategyHandler([action.name], 'maxRange', creep);
+
         const target = _.chain(creep.room.hostiles).filter(function(target) {
             return action.isValidTarget(target);
         }).map(function(target) {
             let score = 0;
             const range = creep.pos.getRangeTo(target);
             if (creep.owner.username === "Invader") {
-                score = range - 51;
-            } else if (range < 10) {
-                score = range - 11;
+                score = range - 51; // TODO how to score invaders vs players?
+            } else if (range < maxRange) {
+                score = range - maxRange;
             } else {
-                score = range - 26;
+                score = 0;
             }
             return {target, score};
         }).filter('score').sortBy('score').first().get('target').value();
@@ -58,23 +60,23 @@ action.work = function(creep) {
         creep.data.safeSpot = creep.getStrategyHandler([action.name], 'findSafeSpot', creep);
     }
 
-    if (creep.data.safeSpot) {
-        const range = creep.pos.getRangeTo(creep.target);
-        if ( range < creep.getStrategyHandler([action.name], 'minRange', creep)) {
-            if (creep.room.isBorder(creep.pos)) {
-                // TODO free from creep in other room?
-            } else {
-                creep.fleeMove();
-            }
-        } else if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
-            if(creep.leaveBorder()) return;
-            const result = creep.travelTo(creep.data.safeSpot);
-            // if (result !== 0) {
-            //     console.log(creep.name, result);
-            // }
+    const range = creep.pos.getRangeTo(creep.target);
+    if ( range < creep.getStrategyHandler([action.name], 'minRange', creep)) {
+        if (creep.room.isBorder(creep.pos)) {
+            // TODO free from creep in other room?
         } else {
+            creep.fleeMove();
+        }
+    }
+    else if (creep.data.safeSpot) {
+        if ( range < creep.getStrategyHandler([action.name], 'maxRange', creep)) {
             if(creep.leaveBorder()) return;
-            console.log('avoid idle');
+            if (DEBUG && TRACE) trace('Action', {creepName:creep.name, avoiding:'avoid spot', Action:'avoiding'});
+            creep.travelTo(creep.data.safeSpot);
+        } else {
+            // TODO beyond maxRange should clear target?
+            if(creep.leaveBorder()) return;
+            if (DEBUG && TRACE) trace('Action', {creepName:creep.name, avoiding:'avoid idle', Action:'avoiding'});
             creep.idleMove();
         }
     }
@@ -107,6 +109,7 @@ action.currentEntrance = function(creep) {
     return false;
 };
 action.currentExit = function(creep) {
+    // TODO this should set a goal and pathfind to the safe location on this exit
     const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
     if (exit) {
         return {roomName: creep.pos.roomName, x: +exit.substring(0,2), y: +exit.substring(2,4)};

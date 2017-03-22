@@ -2705,13 +2705,13 @@ mod.extend = function(){
             const hostiles = room.hostiles;
             for (let i = hostiles.length - 1; i >= 0; i--) {
                 const pos = hostiles[i].pos;
-                console.log('hostile', pos);
+                // console.log('hostile', pos);
                 const dst1 = creepPos.getRangeTo(pos.x, pos.y) - 1;
                 const dst2 = pos.getRangeTo(goal.x, goal.y) - 1;
                 // diamond iterate dst1 apply cost 3
                 if (!_.isFinite(dst1)) continue;
 
-                console.log('diamond 1', pos, dst1);
+                // console.log('diamond 1', pos, dst1);
                 const itr1 = new DiamondIterator(pos, dst1);
                 for (let xy = itr1.next(); xy.done === false; xy = itr1.next()) {
                     if (xy.x < 1 || xy.x > 48) continue;
@@ -2722,8 +2722,8 @@ mod.extend = function(){
                 }
                 // TODO square dst2 cost 4
                 // diamond dst2 cost 4
-                console.log('diamond 2', goal, dst2);
-                if (dst2 && !DiamondIterator.inside(creepPos, pos, dst2)) {
+                // console.log('diamond 2', goal, dst2); TODO debug?
+                if (_.isFinite(dst2) && !DiamondIterator.inside(creepPos, pos, dst2)) {
                     for (let xy of DiamondIterator.loop(pos, dst2)) {
                         if (xy.x < 1 || xy.x > 48) continue;
                         if (xy.y < 1 || xy.y > 48) continue;
