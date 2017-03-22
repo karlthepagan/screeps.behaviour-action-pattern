@@ -346,7 +346,7 @@ module.exports = function(globalOpts = {}){
             let lastPosition = startPos;
             const pushExit = function(set, pos) {
                 set[pos.roomName] = _(set[pos.roomName]).flatten().concat(
-                    _.padLeft(pos.x, 2, '0') + _.padLeft(pos.y, 2, '0')
+                    Traveler.isBorder(pos) + _.padLeft(pos.x, 2, '0') + _.padLeft(pos.y, 2, '0')
                 );
                 return set;
             };
@@ -368,7 +368,16 @@ module.exports = function(globalOpts = {}){
             return result;
         }
         static isBorder(pos) {
-            return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
+            if (pos.x === 0) {
+                return LEFT;
+            } else if (pos.y === 0) {
+                return TOP;
+            } else if (pos.x === 49) {
+                return RIGHT;
+            } else if (pos.y === 49) {
+                return BOTTOM;
+            }
+            return false;
         }
     }
 

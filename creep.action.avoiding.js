@@ -62,7 +62,7 @@ action.work = function(creep) {
 
     const range = creep.pos.getRangeTo(creep.target);
     if ( range < creep.getStrategyHandler([action.name], 'minRange', creep)) {
-        if (creep.room.isBorder(creep.pos)) {
+        if (Room.isBorder(creep.pos)) {
             // TODO free from creep in other room?
         } else {
             creep.fleeMove();
@@ -101,21 +101,6 @@ action.defaultStrategy.maxRange = function(creep) {
 action.defaultStrategy.minRange = function(creep) {
     return 5;
 };
-action.currentEntrance = function(creep) {
-    const exit = _.get(creep.memory, ['_travel','roomIn',creep.pos.roomName,0]);
-    if (exit) {
-        return {roomName: creep.pos.roomName, x: +exit.substring(0,2), y: +exit.substring(2,4)};
-    }
-    return false;
-};
-action.currentExit = function(creep) {
-    // TODO this should set a goal and pathfind to the safe location on this exit
-    const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
-    if (exit) {
-        return {roomName: creep.pos.roomName, x: +exit.substring(0,2), y: +exit.substring(2,4)};
-    }
-    return false;
-};
 action.homeExit = function(creep) {
     // find the route home, move toward the exit until out of danger
     const home = _.chain(creep.room.findRoute(creep.data.homeRoom)).first().get('exit').value();
@@ -130,5 +115,5 @@ action.defaultStrategy.findSafeSpot = function(creep) {
         return flag.pos;
     }
 
-    return action.currentExit(creep) || action.homeExit(creep) || false;
+    return Creep.action.travelling.currentExit(creep) || action.homeExit(creep) || false;
 };

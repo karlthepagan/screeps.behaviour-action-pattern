@@ -2458,7 +2458,18 @@ mod.extend = function(){
         };
         return look.filter(invalidObject).length == 0;
     };
+    /**
+     * @param findExit exit number or RoomPosition to return just that segment
+     * @param point number: return this increment point on the segment, array: add all points, mutating this argument
+     * @return a list of points representing each exit, or a list of all points intersecting the first argument
+     */
     Room.prototype.exits = function(findExit, point) {
+        let filterPoint = false;
+        let returnPoint = false;
+        if (Number.isFinite(findExit.x) && Number.isFinite(findExit.y)) {
+            filterPoint = findExit;
+            findExit = Room.isBorder(findExit);
+        }
         if (point === true) point = 0.5;
         let positions;
         if (findExit === 0) {
@@ -2478,15 +2489,27 @@ mod.extend = function(){
         for (let i = 0; i < positions.length; i++) {
             const pos = positions[i];
             if (!(_.get(map,[pos.x-1, pos.y]) || _.get(map,[pos.x,pos.y-1]))) {
-                if (point && limit !== -1) {
+                if (Number.isFinite(point) && limit !== -1) {
                     ret[limit].x += Math.ceil(point * (maxX - ret[limit].x));
                     ret[limit].y += Math.ceil(point * (maxY - ret[limit].y));
+                }
+                if (returnPoint) {
+                    if (Array.isArray(point)) {
+                        return point[limit];
+                    }
+                    return ret[limit];
                 }
                 limit++;
                 ret[limit] = _.pick(pos, ['x','y']);
                 maxX = pos.x;
                 maxY = pos.y;
                 map = {};
+            }
+            if (Array.isArray(point)) {
+                point[limit] = _(point[limit]).flatten().concat(pos);
+            }
+            if (filterPoint && filterPoint.x === pos.x && filterPoint.y === pos.y) {
+                returnPoint = true;
             }
             _.set(map, [pos.x, pos.y], true);
             maxX = Math.max(maxX, pos.x);
@@ -2693,8 +2716,17 @@ mod.extend = function(){
         }
         this.memory.observer.rooms = ROOMS;
     };
-    Room.prototype.isBorder = function(pos) {
-        return pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49;
+    Room.isBorder = function(pos) {
+        if (pos.x === 0) {
+            return LEFT;
+        } else if (pos.y === 0) {
+            return TOP;
+        } else if (pos.x === 49) {
+            return RIGHT;
+        } else if (pos.y === 49) {
+            return BOTTOM;
+        }
+        return false;
     };
     Room.avoidMatrix = function(roomName, creep, goal) {
         const room = Game.rooms[roomName];

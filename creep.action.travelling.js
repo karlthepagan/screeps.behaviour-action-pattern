@@ -8,7 +8,11 @@ action.newTarget = function(creep){
     return creep.getStrategyHandler([action.name], 'newTarget', creep);
 };
 action.step = function(creep){
-    if(CHATTY) creep.say(this.name, SAY_PUBLIC);
+    if (this.travelAvoid(creep)) {
+        creep.say(String.fromCharCode(10556), SAY_PUBLIC);
+    } else if(CHATTY) {
+        creep.say(this.name, SAY_PUBLIC);
+    }
     let targetRange = creep.data.travelRange || this.targetRange;
     let target = creep.target;
     if (creep.data.travelPos) {
@@ -38,6 +42,7 @@ action.step = function(creep){
         if (result === 0 && targetRange === 1) {
             if (creep.data.travelPos) {
                 delete creep.data.travelPos;
+                delete creep.data.avoiding;
             } else {
                 return action.unregister(creep);
             }
@@ -54,6 +59,56 @@ action.assignRoom = function(creep, roomName) {
     if (_.isUndefined(creep.data.travelRange)) creep.data.travelRange = TRAVELLING_BORDER_RANGE || 22;
     creep.data.travelRoom = roomName;
     return Creep.action.travelling.assign(creep, FlagDir.specialFlag());
+};
+action.travelAvoid = function(creep) {
+    if (!creep.data.avoiding) {
+        const avoid = creep.getStrategyHandler([], 'avoidTargets', creep);
+
+        if (!(avoid && avoid.length)) {
+            return false;
+        }
+
+        const exit = this.currentExit(creep);
+
+        const exitPoints = creep.room.exits(goal, []);
+
+        const matrix = Room.avoidMatrix(creep.pos.roomName, creep, exit);
+        creep._avoidMatrix = matrix;
+
+        const goal = PathFinder.search(creep, exitPoints, {
+            roomCallback: room => room === creep.room ? matrix : false,
+        });
+
+        // TODO save path
+
+        creep.data.travelPos = _.last(goal.path);
+        const success = !!creep.data.travelPos;
+        creep.data.avoiding = success;
+        return success;
+    }
+
+    return false;
+};
+action.currentEntrance = function(creep) {
+    const exit = _.get(creep.memory, ['_travel','roomIn',creep.pos.roomName,0]);
+    if (exit) {
+        return {roomName: creep.pos.roomName,
+            exit: +exit.substring(0,1),
+            x: +exit.substring(1,3),
+            y: +exit.substring(3,5)};
+    }
+    return false;
+};
+action.currentExit = function(creep) {
+    // TODO this should set a goal and pathfind to the safe location on this exit
+    const exit = _.get(creep.memory, ['_travel','roomOut',creep.pos.roomName,0]);
+    if (exit) {
+        return {roomName: creep.pos.roomName,
+            exit: +exit.substring(0,1),
+            x: +exit.substring(1,3),
+            y: +exit.substring(3,5)};
+    }
+    return false;
 };
 action.unregister = function(creep) {
     delete creep.action;
@@ -72,4 +127,7 @@ action.defaultStrategy.newTarget = function(creep) {
         return FlagDir.specialFlag();
     }
     return null;
+};
+action.defaultStrategy.avoidTargets = function(creep) {
+    return creep.room.hostiles;
 };
